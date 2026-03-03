@@ -13,7 +13,7 @@ interface Message {
   content: string;
 }
 
-const Agent = ({ userName, userId, interviewId, type, questions }: AgentProps) => {
+const Agent = ({ userName }: AgentProps) => {
   const vapiRef = useRef<Vapi | null>(null);
 
   const [callStatus, setCallStatus] = useState<CallStatus>("inactive");
@@ -77,7 +77,6 @@ const Agent = ({ userName, userId, interviewId, type, questions }: AgentProps) =
   const isCallActive = callStatus === "active";
   const isConnecting = callStatus === "connecting";
   const isFinished = callStatus === "finished";
-  const isInactive = callStatus === "inactive";
 
   const statusLabel = {
     inactive: "In attesa",
