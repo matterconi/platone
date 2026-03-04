@@ -114,10 +114,8 @@ const Agent = ({
         maxDurationSeconds: 3600,
         variableValues,
         ...(systemPrompt && {
-          assistant: {
-            model: {
-              messages: [{ role: "system", content: systemPrompt }],
-            },
+          model: {
+            messages: [{ role: "system", content: systemPrompt }],
           },
         }),
       }

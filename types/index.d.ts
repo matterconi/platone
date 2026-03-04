@@ -56,10 +56,35 @@ interface InterviewCardProps {
   createdAt?: string;
 }
 
+interface UserProfile {
+  id: string;
+  userId: string;
+  profession: string;
+  level: string;
+  skills: string[];
+  interviewType?: string;
+  createdAt: string;
+}
+
+interface Subscription {
+  id: string;
+  userId: string;
+  plan: "casual" | "regular" | "pro";
+  status: "active" | "inactive" | "cancelled";
+  startsAt: string;
+  endsAt?: string;
+}
+
+interface UserAccess {
+  hasActiveSubscription: boolean;
+  plan: string | null;
+  trialUsed: boolean;
+}
+
 interface AgentProps {
   userName: string;
   userId: string;
-  mode?: "new" | "try-again" | "change-questions";
+  mode?: "new" | "demo" | "try-again" | "change-questions";
   redirectOnFinish?: string;
   // try-again
   interviewId?: string;
