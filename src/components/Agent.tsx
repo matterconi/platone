@@ -142,6 +142,13 @@ const Agent = ({
         <InterviewSetupForm onSubmit={setFormData} />
       )}
 
+      {/* DEBUG — rimuovere in produzione */}
+      {mode === "new" && (
+        <pre className="text-xs text-light-400 bg-dark-300 rounded-xl p-4 overflow-auto">
+          {JSON.stringify(formData, null, 2) ?? "formData: null"}
+        </pre>
+      )}
+
       {/* Cards interviewer + utente */}
       <div className="grid grid-cols-2 gap-6">
 

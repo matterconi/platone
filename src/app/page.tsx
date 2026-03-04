@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 import { Button } from "@/components/ui/button";
 import Interviews from "@/components/Interviews";
+import PricingSection from "@/components/PricingSection";
 
 export default async function Home() {
   const user = await currentUser();
@@ -32,6 +33,9 @@ export default async function Home() {
           <Interviews />
         </section>
       )}
+
+      {/* Pricing — visibile a tutti (nessuna subscription attiva) */}
+      <PricingSection />
     </main>
   );
 }
