@@ -16,10 +16,10 @@ export async function POST() {
   })
   .setProtectedHeader({ alg: "HS256" })
   .setJti(jti)
-  .setExpirationTime("2m")
+  .setExpirationTime("1h")
   .sign(secret);
 
-  await sql`INSERT INTO interview_nonces (jti, user_id, expires_at) VALUES (${jti}, ${userId}, NOW() + INTERVAL '2 minutes' )`; 
+  await sql`INSERT INTO interview_nonces (jti, user_id, expires_at) VALUES (${jti}, ${userId}, NOW() + INTERVAL '1 hour')`; 
 
   
   return Response.json({ nonce })
