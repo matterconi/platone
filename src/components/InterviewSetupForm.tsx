@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, KeyboardEvent } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { interviewFormSchema } from "@/lib/validation";
@@ -15,13 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import SelectField from "./SelectField";
 
 interface Props {
@@ -39,7 +32,7 @@ const InterviewSetupForm = ({ onSubmit }: Props) => {
     },
   });
 
-  const tags = form.watch("techstack") ?? [];
+  const tags = useWatch({ control: form.control, name: "techstack" }) ?? [];
 
   const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
