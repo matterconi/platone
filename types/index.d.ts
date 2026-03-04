@@ -26,6 +26,14 @@ interface Interview {
   finalized: boolean;
 }
 
+interface InterviewFormValues {
+  role?: string;
+  level?: "junior" | "mid" | "senior";
+  type?: "technical" | "behavioral" | "mixed";
+  techstack?: string[];
+  specialization?: string;
+}
+
 interface CreateFeedbackParams {
   interviewId: string;
   userId: string;

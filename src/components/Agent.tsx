@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import InterviewSetupForm from "@/components/InterviewSetupForm";
 
 type CallStatus = "inactive" | "connecting" | "active" | "finished";
 
@@ -34,6 +35,7 @@ const Agent = ({
   const [callStatus, setCallStatus] = useState<CallStatus>("inactive");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [formData, setFormData] = useState<InterviewFormValues | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -100,6 +102,12 @@ const Agent = ({
       if (type) variableValues.type = type;
       if (techstack) variableValues.techstack = techstack.join(", ");
       if (specialization) variableValues.specialization = specialization;
+    } else if (mode === "new" && formData) {
+      if (formData.role) variableValues.role = formData.role;
+      if (formData.level) variableValues.level = formData.level;
+      if (formData.type) variableValues.type = formData.type;
+      if (formData.techstack?.length) variableValues.techstack = formData.techstack.join(", ");
+      if (formData.specialization) variableValues.specialization = formData.specialization;
     }
 
     await vapiRef.current?.start(
@@ -128,6 +136,11 @@ const Agent = ({
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-3xl mx-auto">
+
+      {/* Form setup — solo mode="new" e call non ancora iniziata */}
+      {mode === "new" && callStatus === "inactive" && (
+        <InterviewSetupForm onSubmit={setFormData} />
+      )}
 
       {/* Cards interviewer + utente */}
       <div className="grid grid-cols-2 gap-6">
