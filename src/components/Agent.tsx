@@ -97,6 +97,8 @@ const Agent = ({
 
     const variableValues: Record<string, string> = { userName, nonce, userId };
 
+    if (systemPrompt) variableValues.systemPrompt = systemPrompt;
+
     if (mode === "try-again" && interviewId && questions) {
       variableValues.interviewId = interviewId;
       variableValues.questions = JSON.stringify(questions);
@@ -113,11 +115,6 @@ const Agent = ({
       {
         maxDurationSeconds: 3600,
         variableValues,
-        ...(systemPrompt && {
-          model: {
-            messages: [{ role: "system", content: systemPrompt }],
-          },
-        }),
       }
     );
   };
