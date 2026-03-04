@@ -86,12 +86,16 @@ const Agent = ({
     const token = await getToken();
     const res = await fetch("/api/interview/start", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    })
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ formData: mode === "new" ? formData : null }),
+    });
 
-    const { nonce } = await res.json();
+    const { nonce, systemPrompt } = await res.json();
 
-    const variableValues: Record<string, string> = { userName, nonce, mode };
+    const variableValues: Record<string, string> = { userName, nonce, userId };
 
     if (mode === "try-again" && interviewId && questions) {
       variableValues.interviewId = interviewId;
@@ -102,12 +106,6 @@ const Agent = ({
       if (type) variableValues.type = type;
       if (techstack) variableValues.techstack = techstack.join(", ");
       if (specialization) variableValues.specialization = specialization;
-    } else if (mode === "new" && formData) {
-      if (formData.role) variableValues.role = formData.role;
-      if (formData.level) variableValues.level = formData.level;
-      if (formData.type) variableValues.type = formData.type;
-      if (formData.techstack?.length) variableValues.techstack = formData.techstack.join(", ");
-      if (formData.specialization) variableValues.specialization = formData.specialization;
     }
 
     await vapiRef.current?.start(
@@ -115,6 +113,13 @@ const Agent = ({
       {
         maxDurationSeconds: 3600,
         variableValues,
+        ...(systemPrompt && {
+          assistant: {
+            model: {
+              messages: [{ role: "system", content: systemPrompt }],
+            },
+          },
+        }),
       }
     );
   };
