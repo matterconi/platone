@@ -3,6 +3,14 @@ import Link from "next/link";
 import { interviewCovers } from "@constants";
 import { Button } from "@/components/ui/button";
 
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
 const InterviewCard = ({
   interviewId,
   role,
@@ -10,10 +18,9 @@ const InterviewCard = ({
   techstack,
   createdAt,
 }: InterviewCardProps) => {
-  const coverIndex =
-    interviewId
-      ? parseInt(interviewId, 10) % interviewCovers.length
-      : 0;
+  const coverIndex = interviewId
+    ? hashString(interviewId) % interviewCovers.length
+    : 0;
   const cover = interviewCovers[coverIndex];
 
   const formattedDate = createdAt

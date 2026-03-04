@@ -1,0 +1,79 @@
+import sql from "@/lib/db";
+import { verifyNonce } from "@/lib/nonce";
+import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+
+export async function GET(request: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) return Response.json({ success: false, error: "Missing userId" }, { status: 401 });
+
+  const { searchParams } = request.nextUrl;
+  const role = searchParams.get("role") ?? "";
+  const type = searchParams.get("type") ?? "";
+  const specialization = searchParams.get("specialization") ?? "";
+  const tech = searchParams.get("techstack") ?? "";
+  const limit = Math.min(parseInt(searchParams.get("limit") ?? "10"), 50);
+  const offset = Math.max(parseInt(searchParams.get("offset") ?? "0"), 0);
+
+  try {
+    const rows = await sql`
+      WITH filtered AS (
+        SELECT * FROM interviews
+        WHERE user_id = ${userId}
+          AND (${role} = '' OR role ILIKE ${"%" + role + "%"})
+          AND (${type} = '' OR type = ${type})
+          AND (${specialization} = '' OR specialization = ${specialization})
+          AND (${tech} = '' OR ${tech} = ANY(techstack))
+      )
+      SELECT *, (COUNT(*) OVER())::int AS total_count
+      FROM filtered
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    return Response.json({
+      success: true,
+      data: rows,
+      total: rows[0]?.total_count ?? 0,
+    });
+  } catch (error) {
+    console.error(error);
+    return Response.json({ success: false, error: "Failed to fetch interviews" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+
+  const toolCall = body.message.toolCallList[0];
+  const args = JSON.parse(toolCall.function.arguments);
+
+  const userId = await verifyNonce(args.nonce);
+  const { role, level, type, techstack, questions, specialization } = args;
+  const techstackArray: string[] = techstack.split(",").map((t: string) => t.trim());
+
+  try {
+    await sql`
+      INSERT INTO interviews (user_id, role, type, level, techstack, questions, specialization, finalized)
+      VALUES (
+        ${userId},
+        ${role},
+        ${type},
+        ${level},
+        ${techstackArray},
+        ${questions},
+        ${specialization ?? null},
+        TRUE
+      )
+    `;
+
+    return Response.json({
+      results: [{ toolCallId: toolCall.id, result: "Interview saved successfully" }],
+    });
+  } catch (error) {
+    console.error("Failed to save interview:", error);
+    return Response.json({
+      results: [{ toolCallId: toolCall.id, result: "Failed to save interview" }],
+    }, { status: 500 });
+  }
+}

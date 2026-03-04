@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
-
+import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 type CallStatus = "inactive" | "connecting" | "active" | "finished";
@@ -13,7 +14,21 @@ interface Message {
   content: string;
 }
 
-const Agent = ({ userName }: AgentProps) => {
+const Agent = ({
+  userName,
+  userId,
+  mode = "new",
+  redirectOnFinish,
+  interviewId,
+  questions,
+  role,
+  level,
+  type,
+  techstack,
+  specialization,
+}: AgentProps) => {
+  const router = useRouter();
+  const { getToken } = useAuth();
   const vapiRef = useRef<Vapi | null>(null);
 
   const [callStatus, setCallStatus] = useState<CallStatus>("inactive");
@@ -33,6 +48,9 @@ const Agent = ({ userName }: AgentProps) => {
     vapi.on("call-end", () => {
       setCallStatus("finished");
       setIsSpeaking(false);
+      if (redirectOnFinish) {
+        setTimeout(() => router.push(redirectOnFinish), 1500);
+      }
     });
     vapi.on("speech-start", () => setIsSpeaking(true));
     vapi.on("speech-end", () => setIsSpeaking(false));
@@ -54,7 +72,7 @@ const Agent = ({ userName }: AgentProps) => {
     return () => {
       vapi.stop();
     };
-  }, []);
+  }, [redirectOnFinish, router]);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,10 +80,33 @@ const Agent = ({ userName }: AgentProps) => {
 
   const handleStart = async () => {
     setCallStatus("connecting");
+
+    const token = await getToken();
+    const res = await fetch("/api/interview/start", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    const { nonce } = await res.json();
+
+    const variableValues: Record<string, string> = { userName, nonce, mode };
+
+    if (mode === "try-again" && interviewId && questions) {
+      variableValues.interviewId = interviewId;
+      variableValues.questions = JSON.stringify(questions);
+    } else if (mode === "change-questions") {
+      if (role) variableValues.role = role;
+      if (level) variableValues.level = level;
+      if (type) variableValues.type = type;
+      if (techstack) variableValues.techstack = techstack.join(", ");
+      if (specialization) variableValues.specialization = specialization;
+    }
+
     await vapiRef.current?.start(
       process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
       {
         maxDurationSeconds: 3600,
+        variableValues,
       }
     );
   };
@@ -82,7 +123,7 @@ const Agent = ({ userName }: AgentProps) => {
     inactive: "In attesa",
     connecting: "Connessione in corso...",
     active: "Intervista in corso",
-    finished: "Intervista terminata",
+    finished: redirectOnFinish ? "Reindirizzamento..." : "Intervista terminata",
   }[callStatus];
 
   return (
@@ -203,14 +244,14 @@ const Agent = ({ userName }: AgentProps) => {
               ? "Connessione..."
               : "Inizia intervista"}
           </Button>
-        ) : (
+        ) : !redirectOnFinish ? (
           <Button
             onClick={() => setCallStatus("inactive")}
             className="btn-call min-w-48 rounded-full font-bold"
           >
             Ricomincia
           </Button>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ interface Interview {
   createdAt: string;
   userId: string;
   type: string;
+  specialization?: string;
   finalized: boolean;
 }
 
@@ -49,11 +50,18 @@ interface InterviewCardProps {
 
 interface AgentProps {
   userName: string;
-  userId?: string;
+  userId: string;
+  mode?: "new" | "try-again" | "change-questions";
+  redirectOnFinish?: string;
+  // try-again
   interviewId?: string;
-  feedbackId?: string;
-  type: "generate" | "interview";
   questions?: string[];
+  // change-questions
+  role?: string;
+  level?: string;
+  type?: string;
+  techstack?: string[];
+  specialization?: string;
 }
 
 interface RouteParams {
