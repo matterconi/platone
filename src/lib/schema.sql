@@ -36,6 +36,16 @@ CREATE TABLE IF NOT EXISTS interview_nonces (
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_used BOOLEAN DEFAULT FALSE;
 
+-- Make interview fields nullable and add raw data column
+ALTER TABLE interviews
+  ALTER COLUMN role DROP NOT NULL,
+  ALTER COLUMN type DROP NOT NULL,
+  ALTER COLUMN level DROP NOT NULL,
+  ALTER COLUMN techstack DROP NOT NULL,
+  ALTER COLUMN questions DROP NOT NULL;
+
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS data JSONB;
+
 CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,

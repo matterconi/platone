@@ -48,23 +48,14 @@ export async function POST(request: NextRequest) {
   const toolCall = body.message.toolCallList[0];
   const args = JSON.parse(toolCall.function.arguments);
 
-  const userId = await verifyNonce(args.nonce);
-  const { role, level, type, techstack, questions, specialization } = args;
-  const techstackArray: string[] = techstack.split(",").map((t: string) => t.trim());
-
   try {
+    const userId = await verifyNonce(args.nonce);
+
+    console.log("VAPI save_interview args:", JSON.stringify(args, null, 2));
+
     await sql`
-      INSERT INTO interviews (user_id, role, type, level, techstack, questions, specialization, finalized)
-      VALUES (
-        ${userId},
-        ${role},
-        ${type},
-        ${level},
-        ${techstackArray},
-        ${questions},
-        ${specialization ?? null},
-        TRUE
-      )
+      INSERT INTO interviews (user_id, data, finalized)
+      VALUES (${userId}, ${JSON.stringify(args)}, TRUE)
     `;
 
     return Response.json({

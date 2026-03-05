@@ -38,7 +38,7 @@ Rules for systemPrompt (only when valid: true):
 - VAPI must ask one question at a time and keep every response under 20 seconds - 1 minute of speech.
 - Adapt the interview structure to the domain and role (behavioral, technical/conceptual, case study or problem-solving if relevant, final evaluation).
 - Final evaluation must include: Domain Knowledge (1-10), Problem Solving (1-10), Communication (1-10), Estimated Seniority, Strengths, Weaknesses, Improvement Plan.
-- At the very end, VAPI must call the function save_interview with userId: {{userId}} and all collected metadata (role, level, domain, specialization, type, objective, questions asked).
+- At the very end, VAPI must call the function save_interview with nonce: {{nonce}}, userId: {{userId}}, and all collected metadata (role, level, domain, specialization, type, objective, questions asked).
 - Be efficient and natural for voice conversation.
 - Output only the system prompt text, nothing else.`;
 
