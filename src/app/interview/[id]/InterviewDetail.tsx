@@ -82,7 +82,7 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {interview.techstack.map((tech) => (
+            {(interview.techstack ?? []).map((tech) => (
               <span
                 key={tech}
                 className="bg-dark-300 text-light-400 rounded px-2 py-0.5 text-xs"
