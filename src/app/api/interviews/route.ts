@@ -53,6 +53,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("VAPI webhook raw body:", JSON.stringify(body, null, 2));
 
+    const callId: string = body.message.call?.id;
+    if (!callId) throw new Error("Missing call.id");
+
+    const [session] = await sql`
+      SELECT user_id FROM interview_sessions
+      WHERE call_id = ${callId}
+        AND created_at > NOW() - INTERVAL '4 hours'
+    `;
+    if (!session) throw new Error(`No session found for call_id: ${callId}`);
+    const userId: string = session.user_id;
+
     const toolCall = body.message.toolCallList[0];
     toolCallId = toolCall.id;
 
@@ -61,12 +72,20 @@ export async function POST(request: NextRequest) {
 
     console.log("VAPI save_interview args:", JSON.stringify(args, null, 2));
 
-    const userId: string = args.userId;
-    if (!userId) throw new Error("Missing userId");
+    const data = {
+      role:           args.role           ?? null,
+      level:          args.level          ?? null,
+      domain:         args.domain         ?? null,
+      specialization: args.specialization ?? null,
+      type:           args.type           ?? null,
+      objective:      args.objective      ?? null,
+      questions:      args.questions      ?? [],
+      evaluation:     args.evaluation     ?? null,
+    };
 
     await sql`
       INSERT INTO interviews (user_id, data, finalized)
-      VALUES (${userId}, ${JSON.stringify(args)}, TRUE)
+      VALUES (${userId}, ${JSON.stringify(data)}, TRUE)
     `;
 
     return Response.json({

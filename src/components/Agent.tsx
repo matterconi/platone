@@ -17,7 +17,6 @@ interface Message {
 
 const Agent = ({
   userName,
-  userId,
   mode = "new",
   redirectOnFinish,
   interviewId,
@@ -107,7 +106,7 @@ const Agent = ({
     const questionMap = { quick: 3, regular: 5, long: 7 };
     const numQuestions = questionMap[duration as keyof typeof questionMap] ?? 5;
 
-    const variableValues: Record<string, string> = { userName, userId, numQuestions: String(numQuestions) };
+    const variableValues: Record<string, string> = { userName, numQuestions: String(numQuestions) };
 
     if (systemPrompt) variableValues.systemPrompt = systemPrompt;
 
@@ -122,13 +121,24 @@ const Agent = ({
       if (specialization) variableValues.specialization = specialization;
     }
 
-    await vapiRef.current?.start(
+    const call = await vapiRef.current?.start(
       process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
       {
         maxDurationSeconds: 3600,
         variableValues,
       }
     );
+
+    if (call?.id) {
+      await fetch("/api/interview/register-call", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ callId: call.id }),
+      });
+    }
   };
 
   const handleStop = () => {

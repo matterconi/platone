@@ -65,3 +65,12 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   ends_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Binds a VAPI call_id to a verified Clerk user_id.
+-- Populated by /api/interview/register-call after vapi.start() returns.
+-- Records older than 4 hours can be safely deleted.
+CREATE TABLE IF NOT EXISTS interview_sessions (
+  call_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
