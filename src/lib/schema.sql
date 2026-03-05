@@ -77,3 +77,19 @@ CREATE TABLE IF NOT EXISTS interview_sessions (
 );
 
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS title TEXT;
+
+-- Duration tracking on sessions
+ALTER TABLE interview_sessions
+  ADD COLUMN IF NOT EXISTS duration_seconds INT,
+  ADD COLUMN IF NOT EXISTS ended_at TIMESTAMPTZ;
+
+-- Usage log per billing (one row per call, UNIQUE on call_id prevents double-counting)
+CREATE TABLE IF NOT EXISTS usage_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  call_id TEXT NOT NULL UNIQUE,
+  duration_seconds INT NOT NULL,
+  recorded_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS usage_logs_user_recorded ON usage_logs (user_id, recorded_at);

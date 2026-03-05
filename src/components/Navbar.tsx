@@ -10,7 +10,7 @@ const Navbar = () => {
         <span className="text-white font-semibold text-lg">PrepWise</span>
       </Link>
 
-      <div>
+      <div className="flex items-center gap-5">
         <SignedOut>
           <SignInButton>
             <button className="text-sm text-white/70 hover:text-white transition-colors cursor-pointer">
@@ -19,6 +19,9 @@ const Navbar = () => {
           </SignInButton>
         </SignedOut>
         <SignedIn>
+          <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition-colors">
+            Piano
+          </Link>
           <UserButton />
         </SignedIn>
       </div>

@@ -3,6 +3,7 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
 import { z } from "zod";
 import sql from "@/lib/db";
+import { getUserAccess, getRemainingSeconds } from "@/lib/subscription";
 
 const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY! });
 
@@ -56,6 +57,14 @@ Rules for systemPrompt (only when valid: true):
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const access = await getUserAccess(userId);
+  if (access.hasActiveSubscription && access.plan && access.periodStart) {
+    const remaining = await getRemainingSeconds(userId, access.plan, access.periodStart);
+    if (remaining < 60) {
+      return Response.json({ error: "Hai esaurito i minuti del piano corrente." }, { status: 403 });
+    }
+  }
 
   const body = await req.json().catch(() => ({}));
   const userMessage: string = body.userMessage ?? "";

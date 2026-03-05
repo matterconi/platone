@@ -79,6 +79,7 @@ interface UserAccess {
   hasActiveSubscription: boolean;
   plan: string | null;
   trialUsed: boolean;
+  periodStart?: Date | null;
 }
 
 interface AgentProps {
