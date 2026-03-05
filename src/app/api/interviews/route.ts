@@ -43,15 +43,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-
-  const toolCall = body.message.toolCallList[0];
-  const args = JSON.parse(toolCall.function.arguments);
+  let toolCallId: string | undefined;
 
   try {
-    const userId = await verifyNonce(args.nonce);
+    const body = await request.json();
+    console.log("VAPI webhook raw body:", JSON.stringify(body, null, 2));
+
+    const toolCall = body.message.toolCallList[0];
+    toolCallId = toolCall.id;
+
+    const rawArgs = toolCall.function.arguments;
+    const args = typeof rawArgs === "string" ? JSON.parse(rawArgs) : rawArgs;
 
     console.log("VAPI save_interview args:", JSON.stringify(args, null, 2));
+
+    const userId = await verifyNonce(args.nonce);
 
     await sql`
       INSERT INTO interviews (user_id, data, finalized)
@@ -59,12 +65,12 @@ export async function POST(request: NextRequest) {
     `;
 
     return Response.json({
-      results: [{ toolCallId: toolCall.id, result: "Interview saved successfully" }],
+      results: [{ toolCallId, result: "Interview saved successfully" }],
     });
   } catch (error) {
     console.error("Failed to save interview:", error);
     return Response.json({
-      results: [{ toolCallId: toolCall.id, result: "Failed to save interview" }],
+      results: [{ toolCallId, result: "Failed to save interview" }],
     }, { status: 500 });
   }
 }
