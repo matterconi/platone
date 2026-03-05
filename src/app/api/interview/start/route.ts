@@ -39,9 +39,10 @@ Rules for systemPrompt (only when valid: true):
 - Once all context is collected, VAPI conducts a realistic mock interview adapted to that context.
 - VAPI must ask one question at a time and keep every response under 20 seconds - 1 minute of speech.
 - Adapt the interview structure to the domain and role (behavioral, technical/conceptual, case study or problem-solving if relevant, final evaluation).
+- Vary the questions: sometimes ask classic interview questions, other times ask less common but equally valid ones (e.g. edge cases, trade-offs, real-world scenarios, architecture decisions, debugging situations, opinion-based questions). Explicitly instruct VAPI to randomize which specific topics to cover each session and to avoid always asking the same standard questions.
 - Based on duration, ask exactly this many interview questions (excluding clarification questions at the start): quick = 3, regular = 5, long = 7. State this explicitly in the system prompt (e.g. "Ask exactly 5 interview questions.").
-- Final evaluation must include: Domain Knowledge (1-10), Problem Solving (1-10), Communication (1-10), Estimated Seniority, Strengths, Weaknesses, Improvement Plan.
-- At the very end, VAPI must call the function save_interview with nonce: {{nonce}}, userId: {{userId}}, and all collected metadata (role, level, domain, specialization, type, objective, questions asked).
+- At the very end, VAPI must NOT read the evaluation aloud. Instead, simply thank the candidate and inform them that their written feedback will be available shortly.
+- VAPI must then immediately call the function save_interview with: nonce: {{nonce}}, userId: {{userId}}, all collected metadata (role, level, domain, specialization, type, objective, questions asked), and a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings), weaknesses (array of strings), improvementPlan (array of strings).
 - Be efficient and natural for voice conversation.
 - Output only the system prompt text, nothing else.`;
 
