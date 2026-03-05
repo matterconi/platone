@@ -1,10 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import { SignJWT } from "jose";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
 import { z } from "zod";
-
-import sql from "@/lib/db";
 
 const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY! });
 
@@ -42,7 +39,7 @@ Rules for systemPrompt (only when valid: true):
 - Vary the questions: sometimes ask classic interview questions, other times ask less common but equally valid ones (e.g. edge cases, trade-offs, real-world scenarios, architecture decisions, debugging situations, opinion-based questions). Explicitly instruct VAPI to randomize which specific topics to cover each session and to avoid always asking the same standard questions.
 - Based on duration, ask exactly this many interview questions (excluding clarification questions at the start): quick = 3, regular = 5, long = 7. State this explicitly in the system prompt (e.g. "Ask exactly 5 interview questions.").
 - At the very end, VAPI must NOT read the evaluation aloud. Instead, simply thank the candidate and inform them that their written feedback will be available shortly.
-- VAPI must then immediately call the function save_interview with: nonce: {{nonce}}, userId: {{userId}}, all collected metadata (role, level, domain, specialization, type, objective, questions asked), and a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings), weaknesses (array of strings), improvementPlan (array of strings).
+- VAPI must then immediately call the function save_interview with: userId: {{userId}}, all collected metadata (role, level, domain, specialization, type, objective, questions asked), and a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings), weaknesses (array of strings), improvementPlan (array of strings).
 - Be efficient and natural for voice conversation.
 - Output only the system prompt text, nothing else.`;
 
@@ -52,16 +49,6 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const userMessage: string = body.userMessage ?? "";
-
-  const jti = crypto.randomUUID();
-  const secret = new TextEncoder().encode(process.env.NONCE_SECRET!);
-  const nonce = await new SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setJti(jti)
-    .setExpirationTime("1h")
-    .sign(secret);
-
-  await sql`INSERT INTO interview_nonces (jti, user_id, expires_at) VALUES (${jti}, ${userId}, NOW() + INTERVAL '1 hour')`;
 
   const { object } = await generateObject({
     model: deepseek("deepseek-chat"),
@@ -77,5 +64,5 @@ export async function POST(req: Request) {
     return Response.json({ error: object.reason }, { status: 422 });
   }
 
-  return Response.json({ nonce, systemPrompt: object.systemPrompt, duration: object.duration ?? "regular" });
+  return Response.json({ systemPrompt: object.systemPrompt, duration: object.duration ?? "regular" });
 }

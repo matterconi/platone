@@ -1,5 +1,4 @@
 import sql from "@/lib/db";
-import { verifyNonce } from "@/lib/nonce";
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
@@ -46,6 +45,11 @@ export async function POST(request: NextRequest) {
   let toolCallId: string | undefined;
 
   try {
+    const secret = request.headers.get("x-vapi-secret");
+    if (secret !== process.env.VAPI_WEBHOOK_SECRET) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     console.log("VAPI webhook raw body:", JSON.stringify(body, null, 2));
 
@@ -57,7 +61,8 @@ export async function POST(request: NextRequest) {
 
     console.log("VAPI save_interview args:", JSON.stringify(args, null, 2));
 
-    const userId = await verifyNonce(args.nonce);
+    const userId: string = args.userId;
+    if (!userId) throw new Error("Missing userId");
 
     await sql`
       INSERT INTO interviews (user_id, data, finalized)

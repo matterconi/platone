@@ -1,5 +1,4 @@
 import sql from "@/lib/db";
-import { verifyNonce } from "@/lib/nonce";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -18,26 +17,37 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-
-  const toolCall = body.message.toolCallList[0];
-  const args = JSON.parse(toolCall.function.arguments);
-  const userId = await verifyNonce(args.nonce);
-  const { interviewId } = args;
+  let toolCallId: string | undefined;
 
   try {
+    const secret = request.headers.get("x-vapi-secret");
+    if (secret !== process.env.VAPI_WEBHOOK_SECRET) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const toolCall = body.message.toolCallList[0];
+    toolCallId = toolCall.id;
+
+    const rawArgs = toolCall.function.arguments;
+    const args = typeof rawArgs === "string" ? JSON.parse(rawArgs) : rawArgs;
+
+    const userId: string = args.userId;
+    const { interviewId } = args;
+    if (!userId || !interviewId) throw new Error("Missing userId or interviewId");
+
     await sql`
       INSERT INTO interview_attempts (interview_id, user_id)
       VALUES (${interviewId}, ${userId})
     `;
 
     return Response.json({
-      results: [{ toolCallId: toolCall.id, result: "Attempt saved successfully" }],
+      results: [{ toolCallId, result: "Attempt saved successfully" }],
     });
   } catch (error) {
     console.error("Failed to save attempt:", error);
     return Response.json({
-      results: [{ toolCallId: toolCall.id, result: "Failed to save attempt" }],
+      results: [{ toolCallId, result: "Failed to save attempt" }],
     }, { status: 500 });
   }
 }
