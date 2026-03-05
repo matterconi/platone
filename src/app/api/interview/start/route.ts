@@ -64,5 +64,7 @@ export async function POST(req: Request) {
     return Response.json({ error: object.reason }, { status: 422 });
   }
 
-  return Response.json({ systemPrompt: object.systemPrompt, duration: object.duration ?? "regular" });
+  const systemPrompt = (object.systemPrompt ?? "").replace(/\{\{userId\}\}/g, userId);
+
+  return Response.json({ systemPrompt, duration: object.duration ?? "regular" });
 }
