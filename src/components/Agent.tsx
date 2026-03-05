@@ -101,7 +101,7 @@ const Agent = ({
       return;
     }
 
-    const { systemPrompt, duration } = data;
+    const { systemPrompt, duration, title } = data;
 
     const questionMap = { quick: 3, regular: 5, long: 7 };
     const numQuestions = questionMap[duration as keyof typeof questionMap] ?? 5;
@@ -136,7 +136,7 @@ const Agent = ({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ callId: call.id }),
+        body: JSON.stringify({ callId: call.id, title }),
       });
     }
   };

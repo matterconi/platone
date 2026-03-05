@@ -11,6 +11,7 @@ const resultSchema = z.object({
   reason: z.string().optional(),
   systemPrompt: z.string().optional(),
   duration: z.enum(["quick", "regular", "long"]).optional(),
+  title: z.string().optional(),
 });
 
 const META_PROMPT = `You are an expert at writing system prompts for AI voice interviewers.
@@ -20,10 +21,11 @@ From the user's message, extract what is provided among:
 - role (e.g. developer, financial analyst, cardiologist)
 - level (e.g. junior, mid, senior)
 - domain (the broad professional field, e.g. web development, finance, medicine, law)
-- specialization (the specific focus within the domain, e.g. frontend, animations, M&A, cardiology)
+- specialization (the specific focus within the domain, e.g. frontend, animations, M&A, cardiology — always infer this even if not explicitly stated: e.g. "React developer" → "frontend / React", "cardiologist" → "cardiology", "M&A lawyer" → "M&A")
 - interview type (e.g. technical, behavioral, mixed, case study)
 - objective (e.g. job interview prep, academic, certification)
 - duration (how long / how many questions: "quick" = 3 questions, "regular" = 5 questions, "long" = 7 questions — infer from context or default to "regular")
+- title (a concise label for the interview, max 60 chars, combining the most distinctive elements: level + role + key specialization or focus. Examples: "Senior Frontend Developer · React/Next.js", "Cardiologist · Clinical Behavioral", "M&A Lawyer · Senior · Case Study". Omit redundant info, no level if already in role.)
 
 Then:
 - If the message describes an interview or job role (any field) → set valid: true and write a systemPrompt.
@@ -84,5 +86,9 @@ export async function POST(req: Request) {
     return Response.json({ error: object.reason }, { status: 422 });
   }
 
-  return Response.json({ systemPrompt: object.systemPrompt, duration: object.duration ?? "regular" });
+  return Response.json({
+    systemPrompt: object.systemPrompt,
+    duration: object.duration ?? "regular",
+    title: object.title ?? null,
+  });
 }

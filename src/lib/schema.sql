@@ -72,5 +72,8 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 CREATE TABLE IF NOT EXISTS interview_sessions (
   call_id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  title TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS title TEXT;

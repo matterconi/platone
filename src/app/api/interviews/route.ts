@@ -57,12 +57,13 @@ export async function POST(request: NextRequest) {
     if (!callId) throw new Error("Missing call.id");
 
     const [session] = await sql`
-      SELECT user_id FROM interview_sessions
+      SELECT user_id, title FROM interview_sessions
       WHERE call_id = ${callId}
         AND created_at > NOW() - INTERVAL '4 hours'
     `;
     if (!session) throw new Error(`No session found for call_id: ${callId}`);
     const userId: string = session.user_id;
+    const sessionTitle: string | null = session.title ?? null;
 
     const toolCall = body.message.toolCallList[0];
     toolCallId = toolCall.id;
@@ -96,6 +97,7 @@ export async function POST(request: NextRequest) {
       : null;
 
     const data = {
+      title:          sessionTitle,
       role:           typeof args.role === "string" ? args.role.trim() : null,
       level:          normalize(args.level),
       domain:         typeof args.domain === "string" ? args.domain.trim() : null,
@@ -108,9 +110,10 @@ export async function POST(request: NextRequest) {
     };
 
     await sql`
-      INSERT INTO interviews (user_id, role, type, level, specialization, questions, data, finalized)
+      INSERT INTO interviews (user_id, title, role, type, level, specialization, questions, data, finalized)
       VALUES (
         ${userId},
+        ${data.title},
         ${data.role},
         ${data.type},
         ${data.level},
