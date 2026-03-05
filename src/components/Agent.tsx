@@ -102,9 +102,12 @@ const Agent = ({
       return;
     }
 
-    const { nonce, systemPrompt } = data;
+    const { nonce, systemPrompt, duration } = data;
 
-    const variableValues: Record<string, string> = { userName, nonce, userId };
+    const questionMap = { quick: 3, regular: 5, long: 7 };
+    const numQuestions = questionMap[duration as keyof typeof questionMap] ?? 5;
+
+    const variableValues: Record<string, string> = { userName, nonce, userId, numQuestions: String(numQuestions) };
 
     if (systemPrompt) variableValues.systemPrompt = systemPrompt;
 

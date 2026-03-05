@@ -12,6 +12,7 @@ const resultSchema = z.object({
   valid: z.boolean(),
   reason: z.string().optional(),
   systemPrompt: z.string().optional(),
+  duration: z.enum(["quick", "regular", "long"]).optional(),
 });
 
 const META_PROMPT = `You are an expert at writing system prompts for AI voice interviewers.
@@ -24,6 +25,7 @@ From the user's message, extract what is provided among:
 - specialization (the specific focus within the domain, e.g. frontend, animations, M&A, cardiology)
 - interview type (e.g. technical, behavioral, mixed, case study)
 - objective (e.g. job interview prep, academic, certification)
+- duration (how long / how many questions: "quick" = 3 questions, "regular" = 5 questions, "long" = 7 questions — infer from context or default to "regular")
 
 Then:
 - If the message describes an interview or job role (any field) → set valid: true and write a systemPrompt.
@@ -37,6 +39,7 @@ Rules for systemPrompt (only when valid: true):
 - Once all context is collected, VAPI conducts a realistic mock interview adapted to that context.
 - VAPI must ask one question at a time and keep every response under 20 seconds - 1 minute of speech.
 - Adapt the interview structure to the domain and role (behavioral, technical/conceptual, case study or problem-solving if relevant, final evaluation).
+- Based on duration, ask exactly this many interview questions (excluding clarification questions at the start): quick = 3, regular = 5, long = 7. State this explicitly in the system prompt (e.g. "Ask exactly 5 interview questions.").
 - Final evaluation must include: Domain Knowledge (1-10), Problem Solving (1-10), Communication (1-10), Estimated Seniority, Strengths, Weaknesses, Improvement Plan.
 - At the very end, VAPI must call the function save_interview with nonce: {{nonce}}, userId: {{userId}}, and all collected metadata (role, level, domain, specialization, type, objective, questions asked).
 - Be efficient and natural for voice conversation.
@@ -73,5 +76,5 @@ export async function POST(req: Request) {
     return Response.json({ error: object.reason }, { status: 422 });
   }
 
-  return Response.json({ nonce, systemPrompt: object.systemPrompt });
+  return Response.json({ nonce, systemPrompt: object.systemPrompt, duration: object.duration ?? "regular" });
 }
