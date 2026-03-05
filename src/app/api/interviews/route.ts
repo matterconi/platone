@@ -72,15 +72,39 @@ export async function POST(request: NextRequest) {
 
     console.log("VAPI save_interview args:", JSON.stringify(args, null, 2));
 
+    const normalize = (s: unknown) =>
+      typeof s === "string" ? s.trim().toLowerCase() : null;
+
+    // Canonical key aliases: maps any LLM variant → canonical name
+    const KEY_ALIASES: Record<string, string> = {
+      tech_stack: "techstack", technologies: "techstack", stack: "techstack",
+      framework: "frameworks",
+      procedure: "procedures",
+      instrument: "instruments",
+      channel: "channels",
+      tool: "tools",
+    };
+
+    const rawExtras = args.extras && typeof args.extras === "object" ? args.extras : null;
+    const extras = rawExtras
+      ? Object.fromEntries(
+          Object.entries(rawExtras).map(([k, v]) => {
+            const canonical = KEY_ALIASES[k.toLowerCase()] ?? k.toLowerCase();
+            return [canonical, v];
+          })
+        )
+      : null;
+
     const data = {
-      role:           args.role           ?? null,
-      level:          args.level          ?? null,
-      domain:         args.domain         ?? null,
-      specialization: args.specialization ?? null,
-      type:           args.type           ?? null,
-      objective:      args.objective      ?? null,
-      questions:      args.questions      ?? [],
-      evaluation:     args.evaluation     ?? null,
+      role:           typeof args.role === "string" ? args.role.trim() : null,
+      level:          normalize(args.level),
+      domain:         typeof args.domain === "string" ? args.domain.trim() : null,
+      specialization: typeof args.specialization === "string" ? args.specialization.trim() : null,
+      type:           normalize(args.type),
+      objective:      typeof args.objective === "string" ? args.objective.trim() : null,
+      questions:      args.questions   ?? [],
+      evaluation:     args.evaluation  ?? null,
+      extras,
     };
 
     await sql`

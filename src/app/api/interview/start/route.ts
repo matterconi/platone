@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
 import { z } from "zod";
+import sql from "@/lib/db";
 
 const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY! });
 
@@ -39,7 +40,14 @@ Rules for systemPrompt (only when valid: true):
 - Vary the questions: sometimes ask classic interview questions, other times ask less common but equally valid ones (e.g. edge cases, trade-offs, real-world scenarios, architecture decisions, debugging situations, opinion-based questions). Explicitly instruct VAPI to randomize which specific topics to cover each session and to avoid always asking the same standard questions.
 - Based on duration, ask exactly this many interview questions (excluding clarification questions at the start): quick = 3, regular = 5, long = 7. State this explicitly in the system prompt (e.g. "Ask exactly 5 interview questions.").
 - At the very end, VAPI must NOT read the evaluation aloud. Instead, simply thank the candidate and inform them that their written feedback will be available shortly.
-- VAPI must then immediately call the function save_interview with: all collected metadata (role, level, domain, specialization, type, objective, questions asked), and a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings), weaknesses (array of strings), improvementPlan (array of strings).
+- VAPI must then immediately call the function save_interview with: all collected metadata (role, level, domain, specialization, type, objective, questions asked), a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings), weaknesses (array of strings), improvementPlan (array of strings), and an extras object with domain-specific metadata using ONLY these canonical keys:
+  - tech/engineering: techstack (string[]), frameworks (string[])
+  - medicine/healthcare: clinical_setting (string), procedures (string[])
+  - law/legal: practice_area (string), jurisdiction (string)
+  - finance/economics: asset_class (string), instruments (string[])
+  - marketing/design: channels (string[]), tools (string[])
+  - other domains: use the most relevant 1-2 keys in snake_case, string or string[] values only
+  Rules for extras: max 3 keys, only the most distinctive information for the domain. Extras are complementary to the core fields — do not duplicate role, level, domain, or specialization. If the user provided many details, distill only what is most relevant and not already captured elsewhere. Keep values concise (short strings or short arrays). Omit extras entirely if nothing domain-specific was discussed.
 - Be efficient and natural for voice conversation.
 - Output only the system prompt text, nothing else.`;
 
@@ -50,12 +58,24 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const userMessage: string = body.userMessage ?? "";
 
+  // Query existing extras keys from this user's history for consistency
+  const extrasRows = await sql`
+    SELECT DISTINCT jsonb_object_keys(data->'extras') AS key
+    FROM interviews
+    WHERE user_id = ${userId} AND data->'extras' IS NOT NULL
+  `.catch(() => []);
+  const existingExtrasKeys = extrasRows.map((r) => (r as { key: string }).key);
+
+  const systemContent = existingExtrasKeys.length > 0
+    ? `${META_PROMPT}\n\nExtras keys already used in this user's history (prefer reusing these for consistency): ${existingExtrasKeys.join(", ")}`
+    : META_PROMPT;
+
   const { object } = await generateObject({
     model: deepseek("deepseek-chat"),
     output: "object",
     schema: resultSchema,
     messages: [
-      { role: "system", content: META_PROMPT },
+      { role: "system", content: systemContent },
       { role: "user", content: userMessage || "" },
     ],
   });
