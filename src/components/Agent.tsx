@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import InterviewSetupForm from "@/components/InterviewSetupForm";
+import InterviewInput from "@/components/InterviewInput";
 
 type CallStatus = "inactive" | "connecting" | "active" | "finished";
 
@@ -35,7 +35,8 @@ const Agent = ({
   const [callStatus, setCallStatus] = useState<CallStatus>("inactive");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [formData, setFormData] = useState<InterviewFormValues | null>(null);
+  const [userMessage, setUserMessage] = useState("");
+  const [inputError, setInputError] = useState<string | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,10 +91,18 @@ const Agent = ({
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ formData: mode === "new" ? formData : null }),
+      body: JSON.stringify({ userMessage: mode === "new" ? userMessage : "" }),
     });
 
-    const { nonce, systemPrompt } = await res.json();
+    const data = await res.json();
+
+    if (!res.ok) {
+      setCallStatus("inactive");
+      setInputError(data.error ?? "Prompt non valido. Riprova.");
+      return;
+    }
+
+    const { nonce, systemPrompt } = data;
 
     const variableValues: Record<string, string> = { userName, nonce, userId };
 
@@ -137,16 +146,17 @@ const Agent = ({
   return (
     <div className="flex flex-col gap-8 w-full max-w-3xl mx-auto">
 
-      {/* Form setup — solo mode="new" e call non ancora iniziata */}
       {mode === "new" && callStatus === "inactive" && (
-        <InterviewSetupForm onSubmit={setFormData} />
-      )}
-
-      {/* DEBUG — rimuovere in produzione */}
-      {mode === "new" && (
-        <pre className="text-xs text-light-400 bg-dark-300 rounded-xl p-4 overflow-auto">
-          {JSON.stringify(formData, null, 2) ?? "formData: null"}
-        </pre>
+        <div className="flex flex-col gap-2">
+          <InterviewInput
+            value={userMessage}
+            onChange={(v) => { setUserMessage(v); setInputError(null); }}
+            disabled={false}
+          />
+          {inputError && (
+            <p className="text-destructive-100 text-sm">{inputError}</p>
+          )}
+        </div>
       )}
 
       {/* Cards interviewer + utente */}

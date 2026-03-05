@@ -1,89 +1,53 @@
 import { auth } from "@clerk/nextjs/server";
 import { SignJWT } from "jose";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 import sql from "@/lib/db";
 
-function buildSystemPrompt(formData: InterviewFormValues | null): string {
-  const role = formData?.role?.trim() || "";
-  const level = formData?.level?.trim() || "";
-  const techstack = formData?.techstack?.length
-    ? formData.techstack.join(", ")
-    : "";
-  const type = formData?.type?.trim() || "";
-  const specialization = formData?.specialization?.trim() || "";
+const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY! });
 
-  const allProvided = role && level && techstack && type;
+const resultSchema = z.object({
+  valid: z.boolean(),
+  reason: z.string().optional(),
+  systemPrompt: z.string().optional(),
+});
 
-  const setupInstruction = allProvided
-    ? `All setup variables are already provided:
-- role: "${role}"
-- level: "${level}"
-- techstack: "${techstack}"
-- type: "${type}"${specialization ? `\n- specialization: "${specialization}"` : ""}
+const META_PROMPT = `You are an expert at writing system prompts for AI voice interviewers.
+You cover any professional domain: software engineering, finance, medicine, law, marketing, design, economics, and more.
 
-Say exactly: "Perfect. I have everything I need: ${role}, ${level}, ${techstack}, ${type} interview. Let's begin." — then start immediately without asking anything.`
-    : `Some setup variables are provided. Read them carefully:
-- role: "${role}"
-- level: "${level}"
-- techstack: "${techstack}"
-- type: "${type}"
+From the user's message, extract what is provided among:
+- role (e.g. developer, financial analyst, cardiologist)
+- level (e.g. junior, mid, senior)
+- domain (the broad professional field, e.g. web development, finance, medicine, law)
+- specialization (the specific focus within the domain, e.g. frontend, animations, M&A, cardiology)
+- interview type (e.g. technical, behavioral, mixed, case study)
+- objective (e.g. job interview prep, academic, certification)
 
-Rules:
-- If a variable is "" (empty string), it is NOT provided → ask for it.
-- If a variable has a value, it IS provided → do NOT ask for it again.
-- Ask only for missing variables, one at a time:
-  - Missing role → "What is your target role? (frontend, backend, or full-stack)"
-  - Missing level → "What is your seniority level? (junior, mid, or senior)"
-  - Missing techstack → "What is your main tech stack?"
-  - Missing type → "Should the interview be technical, behavioral, or mixed?"
-Then always ask (optional): "Do you have a specific focus area, like animations, blockchain, DevOps, or accessibility? Or say 'none' to skip."
-Once all required fields are collected, say "Perfect, let's begin." and start.`;
+Then:
+- If the message describes an interview or job role (any field) → set valid: true and write a systemPrompt.
+- If the message is empty or incomplete → set valid: true and write a systemPrompt that instructs VAPI to collect all missing context fields at the start of the call.
+- If the message is off-topic or nonsensical (clearly not about an interview) → set valid: false and explain why in reason.
 
-  return `You are a senior technical interviewer for Web Development roles.
-
-${setupInstruction}
-
-Adapt questions to the specialization if provided.
-
-Run a realistic but concise mock interview.
-
-Structure:
-1) Behavioral (short, focused)
-2) Technical deep dive (adapt to level and specialization)
-3) Light system design (appropriate to level)
-4) Final evaluation
-
-Rules:
-- Ask one question at a time.
-- Keep responses concise.
-- Avoid long explanations.
-- Limit answers to under 20 seconds of speech.
-- Only provide full structured evaluation at the very end.
-
-Final evaluation format:
-Technical Skills (1-10)
-Problem Solving (1-10)
-Communication (1-10)
-System Design (1-10)
-Estimated Seniority
-Strengths
-Weaknesses
-Improvement Plan
-
-Be efficient and natural for voice conversation.
-
-At the very end, call the function save_interview with:
-- userId: {{userId}}
-- role, level, techstack, type, specialization (null if not provided)
-- questions: the exact list of questions you asked`;
-}
+Rules for systemPrompt (only when valid: true):
+- You are writing instructions for a voice AI called VAPI that will conduct the interview. Do NOT write the questions yourself.
+- Start the system prompt by listing all context fields that ARE provided (role, level, domain, specialization, type, objective), so VAPI knows them upfront.
+- Instruct VAPI to ask — one at a time, at the start of the call — only for the fields that are NOT provided.
+- Once all context is collected, VAPI conducts a realistic mock interview adapted to that context.
+- VAPI must ask one question at a time and keep every response under 20 seconds - 1 minute of speech.
+- Adapt the interview structure to the domain and role (behavioral, technical/conceptual, case study or problem-solving if relevant, final evaluation).
+- Final evaluation must include: Domain Knowledge (1-10), Problem Solving (1-10), Communication (1-10), Estimated Seniority, Strengths, Weaknesses, Improvement Plan.
+- At the very end, VAPI must call the function save_interview with userId: {{userId}} and all collected metadata (role, level, domain, specialization, type, objective, questions asked).
+- Be efficient and natural for voice conversation.
+- Output only the system prompt text, nothing else.`;
 
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const formData: InterviewFormValues | null = body.formData ?? null;
+  const userMessage: string = body.userMessage ?? "";
 
   const jti = crypto.randomUUID();
   const secret = new TextEncoder().encode(process.env.NONCE_SECRET!);
@@ -95,7 +59,19 @@ export async function POST(req: Request) {
 
   await sql`INSERT INTO interview_nonces (jti, user_id, expires_at) VALUES (${jti}, ${userId}, NOW() + INTERVAL '1 hour')`;
 
-  const systemPrompt = buildSystemPrompt(formData);
+  const { object } = await generateObject({
+    model: deepseek("deepseek-chat"),
+    output: "object",
+    schema: resultSchema,
+    messages: [
+      { role: "system", content: META_PROMPT },
+      { role: "user", content: userMessage || "" },
+    ],
+  });
 
-  return Response.json({ nonce, systemPrompt });
+  if (!object.valid) {
+    return Response.json({ error: object.reason }, { status: 422 });
+  }
+
+  return Response.json({ nonce, systemPrompt: object.systemPrompt });
 }
