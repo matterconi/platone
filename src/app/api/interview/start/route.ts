@@ -15,6 +15,22 @@ const resultSchema = z.object({
   title: z.string().optional(),
 });
 
+const TRIAL_META_PROMPT = `You are an expert at writing system prompts for AI voice interviewers.
+
+The user is on a FREE TRIAL — they get exactly one short demo interview.
+
+From the user's message, extract the role (e.g. "frontend developer", "marketing manager", "cardiologist").
+If the role is missing or unclear, instruct VAPI to ask for it at the very start of the call (one question only).
+
+Generate a system prompt for a minimal demo interview with these strict rules:
+- Ask EXACTLY 1 interview question, generic and appropriate for the role. Do NOT ask for level, specialization, type, or any other preference.
+- Keep the question broad enough to apply to any level (e.g. "Tell me about a challenging situation you faced in your role and how you handled it.").
+- After the user answers, give 2-3 sentences of warm, encouraging feedback.
+- Then say: "This was your free demo interview. To unlock full sessions with detailed feedback and multiple questions, check out our plans."
+- Immediately call save_interview with the collected data (role, the one question asked, and a brief evaluation).
+- title: a short label like "Demo · [Role]" (max 40 chars).
+- Output only the system prompt text, nothing else.`;
+
 const META_PROMPT = `You are an expert at writing system prompts for AI voice interviewers.
 You cover any professional domain: software engineering, finance, medicine, law, marketing, design, economics, and more.
 
@@ -59,27 +75,42 @@ export async function POST(req: Request) {
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const access = await getUserAccess(userId);
+  let isTrial = false;
+
   if (access.hasActiveSubscription && access.plan && access.periodStart) {
+    // Subscribed user: check remaining minutes
     const remaining = await getRemainingSeconds(userId, access.plan, access.periodStart);
     if (remaining < 60) {
       return Response.json({ error: "Hai esaurito i minuti del piano corrente." }, { status: 403 });
     }
+  } else {
+    // No active subscription: allow only one free trial
+    if (access.trialUsed) {
+      return Response.json({ error: "Il tuo trial gratuito è stato utilizzato. Scegli un piano per continuare." }, { status: 403 });
+    }
+    // Mark trial as used immediately to prevent concurrent starts
+    await sql`UPDATE users SET trial_used = TRUE WHERE id = ${userId}`;
+    isTrial = true;
   }
 
   const body = await req.json().catch(() => ({}));
   const userMessage: string = body.userMessage ?? "";
 
-  // Query existing extras keys from this user's history for consistency
-  const extrasRows = await sql`
-    SELECT DISTINCT jsonb_object_keys(data->'extras') AS key
-    FROM interviews
-    WHERE user_id = ${userId} AND data->'extras' IS NOT NULL
-  `.catch(() => []);
-  const existingExtrasKeys = extrasRows.map((r) => (r as { key: string }).key);
-
-  const systemContent = existingExtrasKeys.length > 0
-    ? `${META_PROMPT}\n\nExtras keys already used in this user's history (prefer reusing these for consistency): ${existingExtrasKeys.join(", ")}`
-    : META_PROMPT;
+  // Trial: use simplified prompt, skip extras query
+  let systemContent: string;
+  if (isTrial) {
+    systemContent = TRIAL_META_PROMPT;
+  } else {
+    const extrasRows = await sql`
+      SELECT DISTINCT jsonb_object_keys(data->'extras') AS key
+      FROM interviews
+      WHERE user_id = ${userId} AND data->'extras' IS NOT NULL
+    `.catch(() => []);
+    const existingExtrasKeys = extrasRows.map((r) => (r as { key: string }).key);
+    systemContent = existingExtrasKeys.length > 0
+      ? `${META_PROMPT}\n\nExtras keys already used in this user's history (prefer reusing these for consistency): ${existingExtrasKeys.join(", ")}`
+      : META_PROMPT;
+  }
 
   const { object } = await generateObject({
     model: deepseek("deepseek-chat"),
