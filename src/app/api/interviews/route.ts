@@ -84,8 +84,17 @@ export async function POST(request: NextRequest) {
     };
 
     await sql`
-      INSERT INTO interviews (user_id, data, finalized)
-      VALUES (${userId}, ${JSON.stringify(data)}, TRUE)
+      INSERT INTO interviews (user_id, role, type, level, specialization, questions, data, finalized)
+      VALUES (
+        ${userId},
+        ${data.role},
+        ${data.type},
+        ${data.level},
+        ${data.specialization},
+        ${data.questions as string[]},
+        ${JSON.stringify(data)},
+        TRUE
+      )
     `;
 
     return Response.json({
