@@ -22,12 +22,17 @@ export default function RefundPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">Refund Eligibility</h2>
         <p className="text-sm leading-relaxed">
-          We offer a full refund within <strong>14 days</strong> of your initial purchase if you
-          have not used more than 10 minutes of interview time during that period.
+          A refund may be requested only if you have <strong>not yet started a paid interview
+          session</strong> after purchasing a subscription. Specifically, no refund will be issued
+          if you have completed the free trial interview, purchased a subscription, and then
+          started at least one interview session under that subscription.
         </p>
         <p className="text-sm leading-relaxed">
-          Refunds are not available for renewal charges after the first billing period, or if
-          significant usage has occurred.
+          By starting a paid interview session, you acknowledge that the service has been
+          delivered and waive your right to a refund for that billing period.
+        </p>
+        <p className="text-sm leading-relaxed">
+          Refunds are never available for subscription renewals.
         </p>
       </section>
 
