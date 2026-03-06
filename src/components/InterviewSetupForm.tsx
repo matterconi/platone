@@ -59,9 +59,9 @@ const InterviewSetupForm = ({ onSubmit }: Props) => {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="label">Ruolo target</FormLabel>
+              <FormLabel className="text-indigo-100! font-normal!">Ruolo target</FormLabel>
               <FormControl>
-                <Input className="input" placeholder="es. Frontend Developer" {...field} />
+                <Input className="bg-zinc-800! rounded-full! min-h-12! px-5! placeholder:text-indigo-100!" placeholder="es. Frontend Developer" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -100,7 +100,7 @@ const InterviewSetupForm = ({ onSubmit }: Props) => {
           name="techstack"
           render={() => (
             <FormItem>
-              <FormLabel className="label">Tech Stack (max 5, premi Invio)</FormLabel>
+              <FormLabel className="text-indigo-100! font-normal!">Tech Stack (max 5, premi Invio)</FormLabel>
               <FormControl>
                 <Input
                   className="input"
@@ -116,13 +116,13 @@ const InterviewSetupForm = ({ onSubmit }: Props) => {
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="flex items-center gap-1 bg-dark-300 text-light-400 text-xs px-3 py-1 rounded-full"
+                      className="flex items-center gap-1 bg-slate-900 text-indigo-400 text-xs px-3 py-1 rounded-full"
                     >
                       {tag}
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
-                        className="text-light-600 hover:text-light-100 ml-1"
+                        className="text-indigo-600 hover:text-indigo-100 ml-1"
                       >
                         ×
                       </button>
@@ -150,7 +150,7 @@ const InterviewSetupForm = ({ onSubmit }: Props) => {
           ]}
         />
   
-        <Button type="submit" className="btn-primary rounded-full w-full mt-2">
+        <Button type="submit" className="bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10 w-full mt-2">
           Conferma
         </Button>
   

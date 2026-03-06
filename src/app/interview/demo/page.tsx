@@ -2,10 +2,14 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 
 import Agent from "@/components/Agent";
+import { getUserAccess } from "@/lib/subscription";
 
-const NewInterviewPage = async () => {
+const DemoInterviewPage = async () => {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
+
+  const access = await getUserAccess(user.id);
+  if (access.trialUsed) redirect("/");
 
   const userName =
     user.firstName ??
@@ -15,21 +19,19 @@ const NewInterviewPage = async () => {
   return (
     <div className="flex flex-col gap-8 px-6 py-12 max-w-3xl mx-auto">
       <div className="flex flex-col gap-1">
-        <h1 className="text-indigo-100 text-2xl font-bold">Nuova Interview</h1>
+        <h1 className="text-indigo-100 text-2xl font-bold">Interview di prova</h1>
         <p className="text-indigo-400 text-sm">
-          L&apos;AI interviewer raccoglierà i dettagli via voce e genererà le
-          domande per te.
+          3 minuti per scoprire come funziona. L&apos;AI raccoglierà il tuo profilo professionale.
         </p>
       </div>
 
       <Agent
         userName={userName}
         userId={user.id}
-        mode="new"
-        redirectOnFinish="/"
+        mode="demo"
       />
     </div>
   );
 };
 
-export default NewInterviewPage;
+export default DemoInterviewPage;

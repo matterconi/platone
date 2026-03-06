@@ -28,6 +28,13 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
+        <head>
+          <script
+            type="text/javascript"
+            src="https://embeds.iubenda.com/widgets/9081dd11-cd1e-4cdc-86cb-0a3479d67b2a.js"
+            async
+          />
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0f] min-h-screen`}
         >

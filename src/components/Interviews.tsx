@@ -108,8 +108,8 @@ export default function Interviews() {
   const pillClass = (active: boolean) =>
     `rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
       active
-        ? "bg-primary-200 text-dark-100"
-        : "bg-dark-200 text-light-400 hover:text-light-100"
+        ? "bg-violet-300 text-zinc-950"
+        : "bg-zinc-800 text-indigo-400 hover:text-indigo-100"
     }`;
 
   return (
@@ -121,7 +121,7 @@ export default function Interviews() {
           placeholder="Cerca per ruolo..."
           value={roleInput}
           onChange={(e) => setRoleInput(e.target.value)}
-          className="bg-dark-200 rounded-full px-5 py-2.5 text-light-100 placeholder:text-light-400 text-sm outline-none focus:ring-1 focus:ring-primary-200/50 sm:max-w-xs"
+          className="bg-zinc-800 rounded-full px-5 py-2.5 text-indigo-100 placeholder:text-indigo-400 text-sm outline-none focus:ring-1 focus:ring-violet-300/50 sm:max-w-xs"
         />
 
         {filterOptions.types.length > 0 && (
@@ -154,11 +154,11 @@ export default function Interviews() {
 
       {/* Risultati */}
       {loading ? (
-        <p className="text-light-400">Caricamento...</p>
+        <p className="text-indigo-400">Caricamento...</p>
       ) : error ? (
-        <p className="text-light-400">Errore: {error}</p>
+        <p className="text-indigo-400">Errore: {error}</p>
       ) : interviews.length === 0 ? (
-        <p className="text-light-400">
+        <p className="text-indigo-400">
           {hasActiveFilter
             ? "Nessuna interview corrisponde ai filtri."
             : "Non hai ancora completato nessuna interview."}
@@ -185,17 +185,17 @@ export default function Interviews() {
           <button
             disabled={currentPage === 0}
             onClick={() => setOffset((p) => Math.max(0, p - PAGE_SIZE))}
-            className="rounded-full px-4 py-1.5 text-sm bg-dark-200 text-light-400 disabled:opacity-40 cursor-pointer hover:text-light-100"
+            className="rounded-full px-4 py-1.5 text-sm bg-zinc-800 text-indigo-400 disabled:opacity-40 cursor-pointer hover:text-indigo-100"
           >
             ←
           </button>
-          <span className="text-light-400 text-sm">
+          <span className="text-indigo-400 text-sm">
             {currentPage + 1} / {totalPages}
           </span>
           <button
             disabled={currentPage >= totalPages - 1}
             onClick={() => setOffset((p) => p + PAGE_SIZE)}
-            className="rounded-full px-4 py-1.5 text-sm bg-dark-200 text-light-400 disabled:opacity-40 cursor-pointer hover:text-light-100"
+            className="rounded-full px-4 py-1.5 text-sm bg-zinc-800 text-indigo-400 disabled:opacity-40 cursor-pointer hover:text-indigo-100"
           >
             →
           </button>

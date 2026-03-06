@@ -17,14 +17,14 @@ const AuthForm = () => {
   };
 
   return (
-    <div className="card-border w-full max-w-md">
-      <div className="card flex flex-col items-center gap-8 py-12 px-10">
+    <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full max-w-md">
+      <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col items-center gap-8 py-12 px-10">
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2">
             <Image src="/logo.svg" alt="PrepWise" width={32} height={32} />
-            <h1 className="text-primary-100 text-2xl font-bold">PrepWise</h1>
+            <h1 className="text-violet-100 text-2xl font-bold">PrepWise</h1>
           </div>
-          <p className="text-light-400 text-center text-sm">
+          <p className="text-indigo-400 text-center text-sm">
             Accedi per iniziare a prepararti con il tuo AI voice assistant.
           </p>
         </div>

@@ -167,7 +167,7 @@ const Agent = ({
             disabled={false}
           />
           {inputError && (
-            <p className="text-destructive-100 text-sm">{inputError}</p>
+            <p className="text-red-400 text-sm">{inputError}</p>
           )}
         </div>
       )}
@@ -176,8 +176,8 @@ const Agent = ({
       <div className="grid grid-cols-2 gap-6">
 
         {/* AI Interviewer */}
-        <div className="card-border">
-          <div className="card flex flex-col items-center gap-4 p-8">
+        <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33]">
+          <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col items-center gap-4 p-8">
             <div className="relative flex items-center justify-center">
               <div className="relative size-24 rounded-full overflow-hidden">
                 <Image
@@ -188,12 +188,12 @@ const Agent = ({
                 />
               </div>
               {isSpeaking && (
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary-200/40 pointer-events-none" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-violet-300/40 pointer-events-none" />
               )}
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
-              <p className="text-light-100 font-semibold">AI Interviewer</p>
-              <span className="text-light-400 text-xs">
+              <p className="text-indigo-100 font-semibold">AI Interviewer</p>
+              <span className="text-indigo-400 text-xs">
                 {isSpeaking ? "Sta parlando..." : "In ascolto"}
               </span>
             </div>
@@ -201,8 +201,8 @@ const Agent = ({
         </div>
 
         {/* Utente */}
-        <div className="card-border">
-          <div className="card flex flex-col items-center gap-4 p-8">
+        <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33]">
+          <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col items-center gap-4 p-8">
             <div className="relative size-24 rounded-full overflow-hidden">
               <Image
                 src="/user-avatar.png"
@@ -212,8 +212,8 @@ const Agent = ({
               />
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
-              <p className="text-light-100 font-semibold">{userName}</p>
-              <span className="text-light-400 text-xs">
+              <p className="text-indigo-100 font-semibold">{userName}</p>
+              <span className="text-indigo-400 text-xs">
                 {isCallActive && !isSpeaking ? "Sta parlando..." : "Candidato"}
               </span>
             </div>
@@ -223,9 +223,9 @@ const Agent = ({
 
       {/* Trascrizione */}
       {messages.length > 0 && (
-        <div className="card-border w-full">
-          <div className="card flex flex-col gap-3 p-6 max-h-64 overflow-y-auto">
-            <p className="text-light-400 text-xs uppercase tracking-widest mb-1">
+        <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full">
+          <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-3 p-6 max-h-64 overflow-y-auto">
+            <p className="text-indigo-400 text-xs uppercase tracking-widest mb-1">
               Trascrizione
             </p>
             {messages.map((msg, i) => (
@@ -235,14 +235,14 @@ const Agent = ({
                   msg.role === "assistant" ? "items-start" : "items-end"
                 }`}
               >
-                <span className="text-light-400 text-xs">
+                <span className="text-indigo-400 text-xs">
                   {msg.role === "assistant" ? "AI Interviewer" : userName}
                 </span>
                 <p
                   className={`text-sm px-4 py-2 rounded-2xl max-w-[85%] ${
                     msg.role === "assistant"
-                      ? "bg-dark-300 text-light-100"
-                      : "bg-primary-200/20 text-light-100"
+                      ? "bg-slate-900 text-indigo-100"
+                      : "bg-violet-300/20 text-indigo-100"
                   }`}
                 >
                   {msg.content}
@@ -260,25 +260,23 @@ const Agent = ({
           <span
             className={`size-2 rounded-full ${
               isCallActive
-                ? "bg-success-100 animate-pulse"
+                ? "bg-green-400 animate-pulse"
                 : isConnecting
                 ? "bg-yellow-400 animate-pulse"
-                : isFinished
-                ? "bg-light-600"
-                : "bg-light-600"
+                : "bg-indigo-600"
             }`}
           />
-          <span className="text-light-400 text-sm">{statusLabel}</span>
+          <span className="text-indigo-400 text-sm">{statusLabel}</span>
         </div>
 
         {!isFinished ? (
           <Button
             onClick={isCallActive ? handleStop : handleStart}
             disabled={isConnecting}
-            className={`min-w-48 rounded-full font-bold ${
+            className={`min-w-48 rounded-full font-bold px-7 py-3 text-sm cursor-pointer transition-colors ${
               isCallActive
-                ? "bg-destructive-100 hover:bg-destructive-200 text-white"
-                : "btn-call"
+                ? "bg-red-400 hover:bg-red-600 text-white"
+                : "bg-green-400 hover:bg-green-500 active:bg-green-500 text-white"
             }`}
           >
             {isCallActive
@@ -290,7 +288,7 @@ const Agent = ({
         ) : !redirectOnFinish ? (
           <Button
             onClick={() => setCallStatus("inactive")}
-            className="btn-call min-w-48 rounded-full font-bold"
+            className="bg-green-400 hover:bg-green-500 active:bg-green-500 text-white min-w-48 rounded-full font-bold px-7 py-3 text-sm cursor-pointer transition-colors"
           >
             Ricomincia
           </Button>

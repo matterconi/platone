@@ -11,9 +11,9 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  casual: "bg-light-600/30 text-light-100",
-  regular: "bg-primary-200/20 text-primary-200",
-  pro: "bg-success-100/20 text-success-100",
+  casual: "bg-indigo-600/30 text-indigo-100",
+  regular: "bg-violet-300/20 text-violet-300",
+  pro: "bg-green-400/20 text-green-400",
 };
 
 export default async function DashboardPage() {
@@ -43,23 +43,23 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex flex-col gap-10 px-6 py-12 max-w-5xl mx-auto">
-      <h1 className="text-light-100 text-3xl font-bold">Il tuo piano</h1>
+      <h1 className="text-indigo-100 text-3xl font-bold">Il tuo piano</h1>
 
       {access.hasActiveSubscription && access.plan ? (
         <div className="flex flex-col gap-6 max-w-lg">
-          <div className="card-border w-full">
-            <div className="card flex flex-col gap-8 p-8">
+          <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full">
+            <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-8 p-8">
 
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">
-                  <span className="text-light-400 text-sm">Piano attuale</span>
-                  <span className="text-light-100 text-2xl font-bold">
+                  <span className="text-indigo-400 text-sm">Piano attuale</span>
+                  <span className="text-indigo-100 text-2xl font-bold">
                     {PLAN_LABELS[access.plan] ?? access.plan}
                   </span>
                 </div>
                 <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_COLORS[access.plan] ?? "bg-dark-300 text-light-400"}`}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_COLORS[access.plan] ?? "bg-slate-900 text-indigo-400"}`}
                 >
                   Attivo
                 </span>
@@ -68,24 +68,24 @@ export default async function DashboardPage() {
               {/* Usage */}
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-light-400 text-sm">Minuti questo periodo</span>
-                  <span className="text-light-100 font-semibold tabular-nums">
+                  <span className="text-indigo-400 text-sm">Minuti questo periodo</span>
+                  <span className="text-indigo-100 font-semibold tabular-nums">
                     {usedMinutes}{" "}
-                    <span className="text-light-400 font-normal text-sm">/ {limitMinutes} min</span>
+                    <span className="text-indigo-400 font-normal text-sm">/ {limitMinutes} min</span>
                   </span>
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full h-2 bg-dark-300 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${isLow ? "bg-destructive-100" : "bg-primary-200"}`}
+                    className={`h-full rounded-full transition-all ${isLow ? "bg-red-400" : "bg-violet-300"}`}
                     style={{ width: `${usagePercent}%` }}
                   />
                 </div>
 
-                <div className="flex justify-between text-xs text-light-400">
+                <div className="flex justify-between text-xs text-indigo-400">
                   <span
-                    className={isLow ? "text-destructive-100 font-medium" : ""}
+                    className={isLow ? "text-red-400 font-medium" : ""}
                   >
                     {remainingMinutes} min rimanenti
                   </span>
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
 
               {/* Upgrade CTA */}
               {access.plan !== "pro" && (
-                <Button asChild className="btn-primary w-full">
+                <Button asChild className="bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10 w-full">
                   <Link href="/#pricing">Passa a un piano superiore</Link>
                 </Button>
               )}
@@ -111,13 +111,13 @@ export default async function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="card-border w-full max-w-lg">
-          <div className="card flex flex-col gap-4 p-8">
-            <p className="text-light-100 font-semibold text-lg">Nessun piano attivo</p>
-            <p className="text-light-400 text-sm">
+        <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full max-w-lg">
+          <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-4 p-8">
+            <p className="text-indigo-100 font-semibold text-lg">Nessun piano attivo</p>
+            <p className="text-indigo-400 text-sm">
               Scegli un piano per accedere alle interview con il tuo AI voice coach.
             </p>
-            <Button asChild className="btn-primary">
+            <Button asChild className="bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10">
               <Link href="/#pricing">Scegli un piano</Link>
             </Button>
           </div>

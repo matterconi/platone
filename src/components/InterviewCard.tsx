@@ -32,8 +32,8 @@ const InterviewCard = ({
     : null;
 
   return (
-    <div className="card-border w-full">
-      <div className="card flex flex-col gap-4 p-6">
+    <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full">
+      <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-4 p-6">
         <div className="flex items-center gap-4">
           <div className="relative size-14 shrink-0">
             <Image
@@ -44,8 +44,8 @@ const InterviewCard = ({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <h3 className="text-light-100 font-semibold">{role}</h3>
-            <span className="text-light-400 text-sm">{type}</span>
+            <h3 className="text-indigo-100 font-semibold">{role}</h3>
+            <span className="text-indigo-400 text-sm">{type}</span>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ const InterviewCard = ({
           {(techstack ?? []).slice(0, 4).map((tech) => (
             <span
               key={tech}
-              className="bg-dark-300 text-light-400 rounded px-2 py-0.5 text-xs"
+              className="bg-slate-900 text-indigo-400 rounded px-2 py-0.5 text-xs"
             >
               {tech}
             </span>
@@ -62,7 +62,7 @@ const InterviewCard = ({
 
         <div className="flex items-center justify-between">
           {formattedDate && (
-            <span className="text-light-400 text-xs">{formattedDate}</span>
+            <span className="text-indigo-400 text-xs">{formattedDate}</span>
           )}
           <Button asChild className="btn ml-auto">
             <Link href={`/interview/${interviewId}`}>Inizia</Link>

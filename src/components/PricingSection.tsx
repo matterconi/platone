@@ -51,8 +51,8 @@ const PricingSection = () => {
   return (
     <section className="flex flex-col gap-10">
       <div className="flex flex-col gap-3 text-center">
-        <h2 className="text-light-100">Scegli il tuo piano</h2>
-        <p className="text-light-400 max-w-lg mx-auto text-sm">
+        <h2 className="text-indigo-100">Scegli il tuo piano</h2>
+        <p className="text-indigo-400 max-w-lg mx-auto text-sm">
           Allenati con il tuo AI voice assistant e preparati al meglio per il
           prossimo colloquio.
         </p>
@@ -63,14 +63,14 @@ const PricingSection = () => {
           <div
             key={plan.name}
             className={`p-0.5 rounded-2xl w-full ${
-              plan.popular ? "border-gradient" : "bg-[#4B4D4F22]"
+              plan.popular ? "bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33]" : "bg-[#4B4D4F22]"
             }`}
           >
-            <div className="card flex flex-col gap-6 p-6 h-full rounded-2xl">
+            <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-6 p-6 h-full">
               {/* Badge */}
               <div className="h-6 flex justify-center">
                 {plan.popular && (
-                  <span className="bg-primary-200 text-dark-100 text-xs font-bold px-3 py-1 rounded-full">
+                  <span className="bg-violet-300 text-zinc-950 text-xs font-bold px-3 py-1 rounded-full">
                     Più popolare
                   </span>
                 )}
@@ -78,14 +78,14 @@ const PricingSection = () => {
 
               {/* Name & Price */}
               <div className="flex flex-col gap-1">
-                <h3 className="text-light-100">{plan.name}</h3>
+                <h3 className="text-indigo-100">{plan.name}</h3>
                 <div className="flex items-end gap-1">
-                  <span className="text-4xl font-bold text-light-100">
+                  <span className="text-4xl font-bold text-indigo-100">
                     €{plan.price}
                   </span>
-                  <span className="text-light-400 mb-1 text-sm">/mese</span>
+                  <span className="text-indigo-400 mb-1 text-sm">/mese</span>
                 </div>
-                <p className="text-light-400 text-sm">{plan.description}</p>
+                <p className="text-indigo-400 text-sm">{plan.description}</p>
               </div>
 
               {/* Features */}
@@ -93,10 +93,10 @@ const PricingSection = () => {
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-center gap-2 text-sm text-light-100"
+                    className="flex items-center gap-2 text-sm text-indigo-100"
                     style={{ listStyle: "none" }}
                   >
-                    <span className="text-success-100 font-bold">✓</span>
+                    <span className="text-green-400 font-bold">✓</span>
                     {f}
                   </li>
                 ))}
@@ -107,8 +107,8 @@ const PricingSection = () => {
                 asChild
                 className={
                   plan.popular
-                    ? "btn-primary !w-full justify-center"
-                    : "btn-secondary !w-full justify-center"
+                    ? "bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10 w-full! justify-center"
+                    : "bg-zinc-800! text-violet-300! hover:bg-zinc-800/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10 w-full! justify-center"
                 }
               >
                 <Link href="/sign-up">{plan.cta}</Link>

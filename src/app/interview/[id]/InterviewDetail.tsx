@@ -22,7 +22,7 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
       <div className="flex flex-col gap-6">
         <button
           onClick={() => setMode(null)}
-          className="text-light-400 text-sm hover:text-light-100 transition-colors self-start"
+          className="text-indigo-400 text-sm hover:text-indigo-100 transition-colors self-start"
         >
           ← Indietro
         </button>
@@ -54,21 +54,21 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
       <div className="flex items-center justify-between">
         <Link
           href="/"
-          className="text-light-400 text-sm hover:text-light-100 transition-colors"
+          className="text-indigo-400 text-sm hover:text-indigo-100 transition-colors"
         >
           ← Home
         </Link>
-        <span className="text-light-400 text-xs">{formattedDate}</span>
+        <span className="text-indigo-400 text-xs">{formattedDate}</span>
       </div>
 
       {/* Dettagli intervista */}
-      <div className="card-border">
-        <div className="card flex flex-col gap-5 p-8">
+      <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33]">
+        <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-5 p-8">
           <div className="flex flex-col gap-1">
-            <h1 className="text-light-100 text-2xl font-bold">
+            <h1 className="text-indigo-100 text-2xl font-bold">
               {interview.role}
             </h1>
-            <div className="flex items-center gap-3 text-light-400 text-sm">
+            <div className="flex items-center gap-3 text-indigo-400 text-sm">
               <span>{interview.type}</span>
               <span>·</span>
               <span>{interview.level}</span>
@@ -85,7 +85,7 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
             {(interview.techstack ?? []).map((tech) => (
               <span
                 key={tech}
-                className="bg-dark-300 text-light-400 rounded px-2 py-0.5 text-xs"
+                className="bg-slate-900 text-indigo-400 rounded px-2 py-0.5 text-xs"
               >
                 {tech}
               </span>
@@ -93,12 +93,12 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-light-400 text-xs uppercase tracking-widest">
+            <p className="text-indigo-400 text-xs uppercase tracking-widest">
               Domande ({interview.questions.length})
             </p>
             <ol className="flex flex-col gap-2">
               {interview.questions.map((q, i) => (
-                <li key={i} className="text-light-100 text-sm">
+                <li key={i} className="text-indigo-100 text-sm">
                   {i + 1}. {q}
                 </li>
               ))}
@@ -108,14 +108,14 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
           <div className="flex gap-3 pt-2">
             <Button
               onClick={() => setMode("try-again")}
-              className="btn-call rounded-full font-bold flex-1"
+              className="bg-green-400 hover:bg-green-500 active:bg-green-500 text-white rounded-full font-bold px-7 py-3 text-sm flex-1 cursor-pointer transition-colors"
             >
               Try Again
             </Button>
             <Button
               onClick={() => setMode("change-questions")}
               variant="outline"
-              className="rounded-full font-bold flex-1 border-light-600 text-light-100 hover:bg-dark-300"
+              className="rounded-full font-bold flex-1 border-indigo-600 text-indigo-100 hover:bg-slate-900"
             >
               Change Questions
             </Button>
