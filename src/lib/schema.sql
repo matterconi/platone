@@ -97,3 +97,12 @@ CREATE INDEX IF NOT EXISTS usage_logs_user_recorded ON usage_logs (user_id, reco
 -- Paddle payment integration
 ALTER TABLE users ADD COLUMN IF NOT EXISTS paddle_customer_id TEXT UNIQUE;
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS paddle_subscription_id TEXT UNIQUE;
+
+-- Credit system
+ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INT NOT NULL DEFAULT 0;
+
+-- Refund eligibility tracking: timestamp of the last successful payment
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS last_paid_at TIMESTAMPTZ;
+
+-- Scheduled plan change (e.g. downgrade or cancellation at next renewal)
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS next_plan TEXT CHECK (next_plan IN ('casual', 'regular', 'pro', 'cancelled'));

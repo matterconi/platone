@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getUserAccess, getRemainingSeconds, PLAN_LIMITS_MINUTES } from "@/lib/subscription";
+import { getUserAccess } from "@/lib/subscription";
+import { PLAN_CREDITS, DEFAULT_CREDITS_PER_MINUTE } from "@/lib/credits";
 import { Button } from "@/components/ui/button";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -22,23 +23,10 @@ export default async function DashboardPage() {
 
   const access = await getUserAccess(userId);
 
-  let usedMinutes = 0;
-  let remainingMinutes = 0;
-  let limitMinutes = 0;
-  let periodEnd: Date | null = null;
-
-  if (access.hasActiveSubscription && access.plan && access.periodStart) {
-    limitMinutes = PLAN_LIMITS_MINUTES[access.plan] ?? 0;
-    const remainingSeconds = await getRemainingSeconds(userId, access.plan, access.periodStart);
-    remainingMinutes = Math.floor(remainingSeconds / 60);
-    usedMinutes = limitMinutes - remainingMinutes;
-    periodEnd = new Date(access.periodStart);
-    periodEnd.setMonth(periodEnd.getMonth() + 1);
-  }
-
-  const usagePercent =
-    limitMinutes > 0 ? Math.min(100, Math.round((usedMinutes / limitMinutes) * 100)) : 0;
-
+  const credits = access.credits ?? 0;
+  const planCredits = access.plan ? (PLAN_CREDITS[access.plan] ?? 0) : 0;
+  const remainingMinutes = Math.floor(credits / DEFAULT_CREDITS_PER_MINUTE);
+  const usagePercent = planCredits > 0 ? Math.min(100, Math.round(((planCredits - credits) / planCredits) * 100)) : 0;
   const isLow = usagePercent >= 80;
 
   return (
@@ -65,13 +53,13 @@ export default async function DashboardPage() {
                 </span>
               </div>
 
-              {/* Usage */}
+              {/* Credits */}
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-indigo-400 text-sm">Minuti questo periodo</span>
+                  <span className="text-indigo-400 text-sm">Credits rimanenti</span>
                   <span className="text-indigo-100 font-semibold tabular-nums">
-                    {usedMinutes}{" "}
-                    <span className="text-indigo-400 font-normal text-sm">/ {limitMinutes} min</span>
+                    {credits}{" "}
+                    <span className="text-indigo-400 font-normal text-sm">/ {planCredits}</span>
                   </span>
                 </div>
 
@@ -84,20 +72,10 @@ export default async function DashboardPage() {
                 </div>
 
                 <div className="flex justify-between text-xs text-indigo-400">
-                  <span
-                    className={isLow ? "text-red-400 font-medium" : ""}
-                  >
-                    {remainingMinutes} min rimanenti
+                  <span className={isLow ? "text-red-400 font-medium" : ""}>
+                    ~{remainingMinutes} min rimanenti
                   </span>
-                  {periodEnd && (
-                    <span>
-                      Reset il{" "}
-                      {periodEnd.toLocaleDateString("it-IT", {
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </span>
-                  )}
+                  <span>{credits} credits</span>
                 </div>
               </div>
 

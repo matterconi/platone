@@ -77,11 +77,11 @@ export async function POST(req: Request) {
   const access = await getUserAccess(userId);
   let isTrial = false;
 
-  if (access.hasActiveSubscription && access.plan && access.periodStart) {
-    // Subscribed user: check remaining minutes
-    const remaining = await getRemainingSeconds(userId, access.plan, access.periodStart);
+  if (access.hasActiveSubscription && access.plan) {
+    // Subscribed user: check at least 1 minute of credits remaining
+    const remaining = await getRemainingSeconds(userId);
     if (remaining < 60) {
-      return Response.json({ error: "Hai esaurito i minuti del piano corrente." }, { status: 403 });
+      return Response.json({ error: "Hai esaurito i crediti del piano corrente." }, { status: 403 });
     }
   } else {
     // No active subscription: allow only one free trial

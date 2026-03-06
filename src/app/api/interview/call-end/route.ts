@@ -1,5 +1,6 @@
 import sql from "@/lib/db";
 import { NextRequest } from "next/server";
+import { getCreditsPerMinute } from "@/lib/credits";
 
 export async function POST(request: NextRequest) {
   const secret = request.headers.get("x-vapi-secret");
@@ -15,6 +16,7 @@ export async function POST(request: NextRequest) {
   }
 
   const callId: string | undefined = body.message.call?.id;
+  const assistantId: string | undefined = body.message.call?.assistantId;
   const durationSeconds: number = Math.round(body.message.durationSeconds ?? 0);
 
   if (!callId) return Response.json({ received: true });
@@ -37,11 +39,23 @@ export async function POST(request: NextRequest) {
   `;
 
   // Insert usage log — ON CONFLICT prevents double-counting if VAPI retries
-  await sql`
+  const [inserted] = await sql`
     INSERT INTO usage_logs (user_id, call_id, duration_seconds)
     VALUES (${session.user_id}, ${callId}, ${durationSeconds})
     ON CONFLICT (call_id) DO NOTHING
+    RETURNING id
   `;
+
+  // Deduct credits only if this is a new log entry (not a VAPI retry)
+  if (inserted) {
+    const creditsPerMinute = getCreditsPerMinute(assistantId);
+    const creditsToDeduct = Math.ceil(durationSeconds / 60) * creditsPerMinute;
+    await sql`
+      UPDATE users
+      SET credits = GREATEST(0, credits - ${creditsToDeduct})
+      WHERE id = ${session.user_id}
+    `;
+  }
 
   return Response.json({ received: true });
 }
