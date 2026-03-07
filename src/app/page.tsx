@@ -9,19 +9,19 @@ export default async function Home() {
   const user = await currentUser();
 
   return (
-    <main className="flex flex-col gap-20 px-6 py-12 max-w-5xl mx-auto">
+    <main className="flex flex-col gap-24 px-6 py-14 max-w-5xl mx-auto">
       {/* Hero */}
       <section className="p-px rounded-3xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F22]">
         <div className="flex flex-row bg-linear-to-b from-[#171532] to-[#08090D] rounded-3xl px-12 py-10 items-center justify-between gap-10 max-sm:flex-col max-sm:px-6 max-sm:py-8">
           {/* Left */}
           <div className="flex flex-col gap-5 max-w-md">
-            <span className="self-start bg-violet-300/10 text-violet-300 text-xs font-semibold px-3 py-1 rounded-full border border-violet-300/20">
+            <span className="self-start bg-violet-400/10 text-violet-300 text-xs font-semibold tracking-wide px-3 py-1 rounded-full border border-violet-400/20 uppercase">
               AI Voice Coach
             </span>
-            <h1 className="text-indigo-100 text-4xl font-bold leading-tight max-sm:text-3xl">
+            <h1 className="text-white text-[2.6rem] font-bold leading-[1.15] tracking-tight max-sm:text-3xl">
               Allenati per il colloquio che conta.
             </h1>
-            <p className="text-indigo-400 text-sm leading-relaxed">
+            <p className="text-indigo-300/70 text-base leading-relaxed max-w-sm">
               Parla con un AI voice coach, ricevi feedback in tempo reale e
               misura i tuoi progressi — sessione dopo sessione.
             </p>
@@ -55,9 +55,9 @@ export default async function Home() {
       {/* Community interviews */}
       <section className="flex flex-col gap-6">
         <div className="flex items-end justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-indigo-100">Interview dalla community</h2>
-            <p className="text-indigo-400 text-sm">
+          <div className="flex flex-col gap-1.5">
+            <h2 className="text-white text-xl">Interview dalla community</h2>
+            <p className="text-indigo-300/60 text-sm">
               Le ultime interview create dagli utenti — riutilizzale o creane di nuove.
             </p>
           </div>

@@ -32,8 +32,8 @@ const InterviewCard = ({
     : null;
 
   return (
-    <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full">
-      <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-4 p-6">
+    <div className="rounded-2xl ring-1 ring-white/[0.07] w-full">
+      <div className="bg-linear-to-b from-[#141519] to-[#0b0c12] rounded-2xl min-h-full flex flex-col gap-4 p-6">
         <div className="flex items-center gap-4">
           <div className="relative size-14 shrink-0">
             <Image
@@ -44,8 +44,8 @@ const InterviewCard = ({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <h3 className="text-indigo-100 font-semibold">{role}</h3>
-            <span className="text-indigo-400 text-sm">{type}</span>
+            <h3 className="text-white font-semibold text-base leading-snug">{role}</h3>
+            <span className="text-indigo-300/50 text-sm">{type}</span>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ const InterviewCard = ({
           {(techstack ?? []).slice(0, 4).map((tech) => (
             <span
               key={tech}
-              className="bg-slate-900 text-indigo-400 rounded px-2 py-0.5 text-xs"
+              className="bg-white/5 text-indigo-300/60 rounded-md px-2 py-0.5 text-xs ring-1 ring-white/8"
             >
               {tech}
             </span>
@@ -62,9 +62,12 @@ const InterviewCard = ({
 
         <div className="flex items-center justify-between">
           {formattedDate && (
-            <span className="text-indigo-400 text-xs">{formattedDate}</span>
+            <span className="text-indigo-300/40 text-xs">{formattedDate}</span>
           )}
-          <Button asChild className="btn ml-auto">
+          <Button
+            asChild
+            className="ml-auto bg-violet-500/15! text-violet-300! hover:bg-violet-500/25! ring-1! ring-violet-500/30! rounded-full! text-sm! font-semibold! px-4! h-8! cursor-pointer transition-colors!"
+          >
             <Link href={`/interview/${interviewId}`}>Inizia</Link>
           </Button>
         </div>

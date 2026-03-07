@@ -89,8 +89,8 @@ const PricingSection = () => {
     <section className="flex flex-col gap-12">
       {/* Header */}
       <div className="flex flex-col gap-3 text-center">
-        <h2 className="text-indigo-100">Scegli il tuo piano</h2>
-        <p className="text-indigo-400 max-w-md mx-auto text-sm leading-relaxed">
+        <h2 className="text-white text-2xl">Scegli il tuo piano</h2>
+        <p className="text-indigo-300/60 max-w-sm mx-auto text-sm leading-relaxed">
           Ogni piano include l&apos;AI voice coach, feedback in tempo reale e lo storico
           delle sessioni. Disdici quando vuoi.
         </p>
@@ -101,16 +101,16 @@ const PricingSection = () => {
         {plans.map((plan) => (
           <div
             key={plan.name}
-            className={`p-px rounded-2xl w-full relative ${
+            className={`rounded-2xl w-full relative flex flex-col ${
               plan.popular
-                ? "bg-linear-to-b from-violet-500/60 via-violet-500/20 to-transparent"
-                : "bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F22]"
+                ? "ring-1 ring-violet-500/70 shadow-[0_0_40px_-8px_rgba(139,92,246,0.35)]"
+                : "ring-1 ring-white/[0.07]"
             }`}
           >
             {/* Popular badge */}
             {plan.popular && (
-              <div className="absolute -top-3 left-0 right-0 flex justify-center">
-                <span className="bg-violet-300 text-zinc-950 text-xs font-bold px-4 py-1 rounded-full shadow-md">
+              <div className="absolute -top-3.5 left-0 right-0 flex justify-center">
+                <span className="bg-violet-500 text-white text-[11px] font-semibold tracking-wide px-3.5 py-1 rounded-full">
                   Più popolare
                 </span>
               </div>
@@ -119,43 +119,43 @@ const PricingSection = () => {
             <div
               className={`rounded-2xl h-full flex flex-col gap-6 p-6 ${
                 plan.popular
-                  ? "bg-linear-to-b from-[#1E1A3A] to-[#08090D]"
-                  : "bg-linear-to-b from-[#1A1C20] to-[#08090D]"
+                  ? "bg-linear-to-b from-[#1c1733] to-[#0b0c12]"
+                  : "bg-linear-to-b from-[#141519] to-[#0b0c12]"
               }`}
             >
-              {/* Name */}
+              {/* Name + Price */}
               <div className="flex flex-col gap-1 pt-2">
                 <span
-                  className={`text-xs font-semibold uppercase tracking-wider ${
-                    plan.popular ? "text-violet-400" : "text-indigo-500"
+                  className={`text-[11px] font-semibold uppercase tracking-widest ${
+                    plan.popular ? "text-violet-400" : "text-indigo-500/80"
                   }`}
                 >
                   {plan.name}
                 </span>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-bold text-indigo-100 tabular-nums">
+                <div className="flex items-end gap-1 mt-1">
+                  <span className="text-[2.4rem] font-bold text-white leading-none tabular-nums tracking-tight">
                     ${plan.price}
                   </span>
-                  <span className="text-indigo-400 mb-1.5 text-sm">/mese</span>
+                  <span className="text-indigo-400/60 mb-1 text-sm font-normal">/mese</span>
                 </div>
-                <p className="text-indigo-400 text-sm">{plan.description}</p>
+                <p className="text-indigo-300/50 text-sm mt-1">{plan.description}</p>
               </div>
 
               {/* Divider */}
-              <div className={`h-px ${plan.popular ? "bg-violet-500/20" : "bg-[#4B4D4F44]"}`} />
+              <div className={`h-px ${plan.popular ? "bg-violet-500/20" : "bg-white/6"}`} />
 
               {/* Features */}
               <ul className="flex flex-col gap-2.5 flex-1">
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-start gap-2.5 text-sm text-indigo-100"
+                    className="flex items-start gap-2.5 text-sm text-indigo-100/80"
                   >
                     <span
-                      className={`mt-0.5 shrink-0 size-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      className={`mt-0.5 shrink-0 size-4.5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                         plan.popular
-                          ? "bg-violet-400/20 text-violet-300"
-                          : "bg-indigo-500/20 text-indigo-400"
+                          ? "bg-violet-500/20 text-violet-300"
+                          : "bg-white/6 text-indigo-400/70"
                       }`}
                     >
                       ✓
@@ -170,8 +170,8 @@ const PricingSection = () => {
                 onClick={() => handleCheckout(plan.priceId)}
                 className={
                   plan.popular
-                    ? "bg-violet-300! text-zinc-950! hover:bg-violet-200! rounded-full! font-bold! cursor-pointer min-h-10 w-full! justify-center"
-                    : "bg-[#ffffff0a]! text-indigo-100! hover:bg-[#ffffff14]! border! border-[#4B4D4F]! rounded-full! font-semibold! cursor-pointer min-h-10 w-full! justify-center"
+                    ? "bg-violet-500! hover:bg-violet-400! text-white! rounded-full! font-semibold! cursor-pointer min-h-10 w-full! justify-center transition-colors!"
+                    : "bg-white/5! text-indigo-100/80! hover:bg-white/9! ring-1! ring-white/10! rounded-full! font-semibold! cursor-pointer min-h-10 w-full! justify-center transition-colors!"
                 }
               >
                 {plan.cta}
