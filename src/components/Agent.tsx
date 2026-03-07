@@ -210,10 +210,10 @@ const Agent = ({
         <div className="flex flex-col gap-6">
           {/* Agent selector */}
           <div className="flex flex-col gap-3">
-            <p className="text-indigo-500 text-xs tracking-widest uppercase">
+            <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
               Scegli il tuo intervistatore
             </p>
-            <div className="flex flex-col gap-2.5">
+            <div className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
               {AGENTS.map((agent) => {
                 const isSelected = selectedAgent.id === agent.id;
                 return (
@@ -221,39 +221,29 @@ const Agent = ({
                     key={agent.id}
                     type="button"
                     onClick={() => setSelectedAgent(agent)}
-                    className={`flex items-center gap-4 p-4 rounded-2xl border text-left transition-all cursor-pointer group ${
+                    className={`flex flex-col gap-3 p-4 rounded-2xl border text-left transition-all cursor-pointer group ${
                       isSelected
-                        ? "border-violet-500/40 bg-violet-500/8 shadow-[0_0_24px_-4px_rgba(139,92,246,0.15)]"
-                        : "border-[#1E2030] bg-[#0C0D14] hover:border-indigo-700/40 hover:bg-indigo-950/30"
+                        ? "border-slate-500/40 bg-white/4 shadow-[0_0_20px_-4px_rgba(255,255,255,0.05)]"
+                        : "border-[#1E2030] bg-[#0C0D14] hover:border-slate-700/50 hover:bg-white/2"
                     }`}
                   >
-                    {/* Avatar */}
-                    <div className={`size-12 rounded-xl bg-linear-to-br ${agent.gradient} flex items-center justify-center shrink-0 text-xl shadow-lg`}>
-                      {agent.icon}
-                    </div>
-
-                    {/* Text */}
-                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-indigo-50 font-semibold text-sm">{agent.name}</p>
-                        {isSelected && (
-                          <span className="text-[10px] text-violet-300 font-semibold bg-violet-500/15 px-2 py-0.5 rounded-full border border-violet-500/20">
-                            Selezionato
-                          </span>
-                        )}
+                    {/* Avatar + Name */}
+                    <div className="flex items-center gap-3">
+                      <div className={`size-10 rounded-xl bg-linear-to-br ${agent.gradient} flex items-center justify-center shrink-0 text-lg shadow-md`}>
+                        {agent.icon}
                       </div>
-                      <p className="text-violet-300 text-xs font-medium">{agent.specialty}</p>
-                      <p className="text-indigo-500 text-xs leading-relaxed truncate">{agent.description}</p>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <p className="text-slate-100 font-semibold text-sm leading-tight">{agent.name}</p>
+                        <p className="text-slate-400 text-xs">{agent.specialty}</p>
+                      </div>
                     </div>
-
-                    {/* Check indicator */}
-                    <div className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      isSelected ? "border-violet-500 bg-violet-500" : "border-[#2A2D3E] group-hover:border-indigo-600"
-                    }`}>
+                    {/* Description + selected badge */}
+                    <div className="flex items-end justify-between gap-2">
+                      <p className="text-slate-500 text-xs leading-relaxed">{agent.description}</p>
                       {isSelected && (
-                        <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <span className="shrink-0 text-[10px] text-slate-300 font-semibold bg-white/8 px-2 py-0.5 rounded-full border border-white/10">
+                          ✓
+                        </span>
                       )}
                     </div>
                   </button>
@@ -262,36 +252,59 @@ const Agent = ({
             </div>
           </div>
 
-          <InterviewInput
-            value={userMessage}
-            onChange={(v) => { setUserMessage(v); setInputError(null); }}
-            disabled={false}
-          />
-          {inputError && (
-            <p className="text-red-400 text-sm">{inputError}</p>
-          )}
-          {suggestions && suggestions.length > 0 && (
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-wrap gap-2">
-                {suggestions.map((s, i) => {
-                  const label = [s.level, s.role].filter(Boolean).join(" ");
-                  const tech = s.techstack?.slice(0, 2).join(", ");
-                  const chipText = `${label}${tech ? ` · ${tech}` : ""}`;
-                  const fillText = `Voglio un'intervista ${s.type || "tecnica"} da ${s.level} ${s.role}${s.techstack?.length ? ` con ${s.techstack.join(", ")}` : ""}`.trim();
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => { setUserMessage(fillText); setInputError(null); }}
-                      className="text-xs px-3 py-1.5 rounded-full bg-indigo-950/50 border border-indigo-800/30 text-indigo-400 hover:border-violet-500/40 hover:text-violet-300 transition-colors cursor-pointer"
-                    >
-                      {chipText}
-                    </button>
-                  );
-                })}
+          {/* Textarea + hints side by side */}
+          <div className="grid grid-cols-[1fr_196px] gap-4 items-start max-sm:grid-cols-1">
+            <div className="flex flex-col gap-2">
+              <InterviewInput
+                value={userMessage}
+                onChange={(v) => { setUserMessage(v); setInputError(null); }}
+                disabled={false}
+              />
+              {inputError && (
+                <p className="text-red-400 text-sm">{inputError}</p>
+              )}
+              {suggestions && suggestions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((s, i) => {
+                    const label = [s.level, s.role].filter(Boolean).join(" ");
+                    const tech = s.techstack?.slice(0, 2).join(", ");
+                    const chipText = `${label}${tech ? ` · ${tech}` : ""}`;
+                    const fillText = `Voglio un'intervista ${s.type || "tecnica"} da ${s.level} ${s.role}${s.techstack?.length ? ` con ${s.techstack.join(", ")}` : ""}`.trim();
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => { setUserMessage(fillText); setInputError(null); }}
+                        className="text-xs px-3 py-1.5 rounded-full bg-[#0E0F16] border border-[#252736] text-slate-400 hover:border-slate-600 hover:text-slate-200 transition-colors cursor-pointer"
+                      >
+                        {chipText}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Hints panel */}
+            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#0C0D14] border border-[#1E2030]">
+              <p className="text-slate-300 text-[11px] font-semibold uppercase tracking-widest">
+                Come scrivere il prompt
+              </p>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { label: "Ruolo", example: "senior frontend developer" },
+                  { label: "Tipo", example: "tecnica · HR · misto" },
+                  { label: "Stack", example: "React, TypeScript" },
+                  { label: "Focus", example: "performance, architettura" },
+                ].map(({ label, example }) => (
+                  <div key={label} className="flex flex-col gap-0.5">
+                    <span className="text-slate-400 text-[11px] font-semibold">{label}</span>
+                    <span className="text-slate-600 text-[11px] leading-snug">{example}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
