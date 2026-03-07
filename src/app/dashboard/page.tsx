@@ -21,17 +21,18 @@ export default async function DashboardPage() {
 
   // Fetch transactions from Paddle if customer exists
   type Transaction = { id: string; createdAt: string; amount: string; currency: string; status: string };
-  let transactions: Transaction[] = [];
+  const transactions: Transaction[] = [];
   if (access.paddleCustomerId) {
     try {
-      const result = await paddle.transactions.list({ customerId: [access.paddleCustomerId] });
-      transactions = (result.data ?? []).map((tx) => ({
-        id: tx.id,
-        createdAt: tx.createdAt ?? "",
-        amount: tx.details?.totals?.total ?? "0",
-        currency: tx.currencyCode ?? "",
-        status: tx.status ?? "",
-      }));
+      for await (const tx of paddle.transactions.list({ customerId: [access.paddleCustomerId] })) {
+        transactions.push({
+          id: tx.id,
+          createdAt: tx.createdAt ?? "",
+          amount: tx.details?.totals?.total ?? "0",
+          currency: tx.currencyCode ?? "",
+          status: tx.status ?? "",
+        });
+      }
     } catch {
       // Non-blocking: storico non disponibile
     }
