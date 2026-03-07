@@ -15,6 +15,47 @@ interface Message {
   content: string;
 }
 
+interface AgentConfig {
+  id: string;
+  name: string;
+  specialty: string;
+  description: string;
+  assistantId: string;
+  color: string; // tailwind bg color for avatar
+  initials: string;
+}
+
+// TODO: replace assistantId values with real VAPI assistant IDs per agent
+const AGENTS: AgentConfig[] = [
+  {
+    id: "technical",
+    name: "Alex",
+    specialty: "Tecnico",
+    description: "Algoritmi, system design e coding challenges",
+    assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
+    color: "bg-indigo-500",
+    initials: "AL",
+  },
+  {
+    id: "hr",
+    name: "Sofia",
+    specialty: "HR & Soft Skills",
+    description: "Behavioral, cultura aziendale e comunicazione",
+    assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
+    color: "bg-violet-500",
+    initials: "SO",
+  },
+  {
+    id: "mixed",
+    name: "Marco",
+    specialty: "Misto",
+    description: "Domande tecniche e comportamentali combinate",
+    assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
+    color: "bg-cyan-600",
+    initials: "MA",
+  },
+];
+
 const Agent = ({
   userName,
   mode = "new",
@@ -38,6 +79,7 @@ const Agent = ({
   const [userMessage, setUserMessage] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<AgentConfig>(AGENTS[0]);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -127,7 +169,7 @@ const Agent = ({
     }
 
     const call = await vapiRef.current?.start(
-      process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
+      selectedAgent.assistantId,
       {
         maxDurationSeconds: 3600,
         variableValues,
@@ -165,7 +207,44 @@ const Agent = ({
     <div className="flex flex-col gap-8 w-full max-w-3xl mx-auto">
 
       {mode === "new" && callStatus === "inactive" && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
+          {/* Agent selector */}
+          <div className="flex flex-col gap-3">
+            <p className="text-indigo-500 text-xs tracking-widest uppercase">
+              Scegli il tuo intervistatore
+            </p>
+            <div className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
+              {AGENTS.map((agent) => (
+                <button
+                  key={agent.id}
+                  type="button"
+                  onClick={() => setSelectedAgent(agent)}
+                  className={`flex flex-col gap-3 p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                    selectedAgent.id === agent.id
+                      ? "border-violet-500/50 bg-violet-500/8"
+                      : "border-[#252736] bg-[#0E0F16] hover:border-indigo-700/50"
+                  }`}
+                >
+                  <div className={`size-10 rounded-full ${agent.color} flex items-center justify-center shrink-0`}>
+                    <span className="text-white text-xs font-bold">{agent.initials}</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-2">
+                      <p className="text-indigo-100 font-semibold text-sm">{agent.name}</p>
+                      {selectedAgent.id === agent.id && (
+                        <span className="text-[10px] text-violet-300 font-medium bg-violet-500/15 px-1.5 py-0.5 rounded-full">
+                          Selezionato
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-violet-300/80 text-xs">{agent.specialty}</p>
+                  </div>
+                  <p className="text-indigo-600 text-xs leading-relaxed">{agent.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <InterviewInput
             value={userMessage}
             onChange={(v) => { setUserMessage(v); setInputError(null); }}
@@ -231,7 +310,7 @@ const Agent = ({
               )}
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
-              <p className="text-indigo-100 font-semibold">AI Interviewer</p>
+              <p className="text-indigo-100 font-semibold">{selectedAgent.name}</p>
               <span className="text-indigo-400 text-xs">
                 {isSpeaking ? "Sta parlando..." : "In ascolto"}
               </span>
