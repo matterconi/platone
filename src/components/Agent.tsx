@@ -36,6 +36,7 @@ const Agent = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [userMessage, setUserMessage] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ const Agent = ({
 
   const handleStart = async () => {
     setCallStatus("connecting");
+    setIsGenerating(true);
 
     const token = await getToken();
     const res = await fetch("/api/interview/start", {
@@ -97,10 +99,12 @@ const Agent = ({
 
     if (!res.ok) {
       setCallStatus("inactive");
+      setIsGenerating(false);
       setInputError(data.error ?? "Prompt non valido. Riprova.");
       return;
     }
 
+    setIsGenerating(false);
     const { systemPrompt, duration, title } = data;
 
     const questionMap = { quick: 3, regular: 5, long: 7 };
@@ -172,7 +176,16 @@ const Agent = ({
         </div>
       )}
 
+      {/* Loading Deepseek */}
+      {isGenerating && (
+        <div className="flex flex-col items-center gap-3 py-6">
+          <div className="size-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+          <p className="text-indigo-400 text-sm">Preparando l&apos;intervista...</p>
+        </div>
+      )}
+
       {/* Cards interviewer + utente */}
+      {(isCallActive || isFinished) && (
       <div className="grid grid-cols-2 gap-6">
 
         {/* AI Interviewer */}
@@ -220,6 +233,7 @@ const Agent = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Trascrizione */}
       {messages.length > 0 && (
