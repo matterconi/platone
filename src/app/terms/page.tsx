@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Terms of Service – Platone",
+  title: "Terms of Service – Intervoice",
 };
 
 export default function TermsPage() {
@@ -13,7 +13,7 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">1. Service</h2>
         <p className="text-sm leading-relaxed">
-          Platone (<strong>platone-alpha.vercel.app</strong>) provides an AI-powered voice interview
+          Intervoice (<strong>intervoice.vercel.app</strong>) provides an AI-powered voice interview
           practice platform. By accessing or using the service, you agree to these Terms.
         </p>
       </section>
@@ -21,7 +21,7 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">2. Eligibility</h2>
         <p className="text-sm leading-relaxed">
-          You must be at least 16 years old to use Platone. By using the service, you represent
+          You must be at least 16 years old to use Intervoice. By using the service, you represent
           that you meet this requirement.
         </p>
       </section>
@@ -29,7 +29,7 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">3. Subscriptions</h2>
         <p className="text-sm leading-relaxed">
-          Platone offers monthly subscription plans (Casual, Regular, Pro). Subscriptions
+          Intervoice offers monthly subscription plans (Casual, Regular, Pro). Subscriptions
           automatically renew each month. You may cancel at any time through the customer portal;
           cancellation takes effect at the end of the current billing period.
         </p>
@@ -51,7 +51,7 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">5. Intellectual Property</h2>
         <p className="text-sm leading-relaxed">
-          All content, features, and functionality of Platone are owned by the operator and
+          All content, features, and functionality of Intervoice are owned by the operator and
           protected by applicable intellectual property laws. You may not copy, reproduce, or
           distribute any part of the service without prior written consent.
         </p>
@@ -68,7 +68,7 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">7. Limitation of Liability</h2>
         <p className="text-sm leading-relaxed">
-          To the maximum extent permitted by law, Platone shall not be liable for any indirect,
+          To the maximum extent permitted by law, Intervoice shall not be liable for any indirect,
           incidental, or consequential damages arising from your use of the service.
         </p>
       </section>

@@ -6,9 +6,12 @@ export async function getUserAccess(userId: string) {
     SELECT
       u.trial_used,
       u.credits,
+      u.paddle_customer_id,
       s.plan,
       s.status,
-      s.starts_at
+      s.starts_at,
+      s.paddle_subscription_id,
+      s.next_plan
     FROM users u
     LEFT JOIN subscriptions s
       ON s.user_id = u.id
@@ -19,13 +22,16 @@ export async function getUserAccess(userId: string) {
   `;
 
   const row = rows[0];
-  if (!row) return { hasActiveSubscription: false, plan: null, trialUsed: false, credits: 0 };
+  if (!row) return { hasActiveSubscription: false, plan: null, trialUsed: false, credits: 0, paddleSubscriptionId: null, nextPlan: null, paddleCustomerId: null };
 
   return {
     hasActiveSubscription: !!row.plan,
     plan: row.plan ?? null,
     trialUsed: row.trial_used ?? false,
     credits: row.credits ?? 0,
+    paddleSubscriptionId: row.paddle_subscription_id ?? null,
+    nextPlan: row.next_plan ?? null,
+    paddleCustomerId: row.paddle_customer_id ?? null,
   };
 }
 
