@@ -218,7 +218,7 @@ const Agent = ({
     <div className="flex flex-col gap-8 w-full max-w-3xl mx-auto">
 
       {mode === "new" && callStatus === "inactive" && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-10">
           {/* Agent selector */}
           <div className="flex flex-col gap-3">
             <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
@@ -272,9 +272,17 @@ const Agent = ({
 
           {/* Textarea */}
           <div className="flex flex-col gap-3">
-            <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
-              Descrivi il ruolo e il contesto
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
+                Descrivi il ruolo e il contesto
+              </p>
+              <Link
+                href="/interview/guide"
+                className="text-slate-500 text-xs hover:text-slate-300 transition-colors"
+              >
+                Come scrivere il prompt →
+              </Link>
+            </div>
             <InterviewInput
               value={userMessage}
               onChange={(v) => { setUserMessage(v); setInputError(null); }}
@@ -308,17 +316,9 @@ const Agent = ({
           {/* Inspiration cards */}
           {recentInterviews && recentInterviews.length > 0 && (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
-                  {recentInterviewsLabel}
-                </p>
-                <Link
-                  href="/interview/guide"
-                  className="text-slate-500 text-xs hover:text-slate-300 transition-colors"
-                >
-                  Scopri come scrivere il prompt perfetto →
-                </Link>
-              </div>
+              <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
+                {recentInterviewsLabel}
+              </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {recentInterviews.map((iv) => {
                   const fillText = `Voglio un'intervista ${iv.type || "tecnica"} da ${iv.level} ${iv.role}${iv.techstack?.length ? ` con ${iv.techstack.join(", ")}` : ""}`.trim();
