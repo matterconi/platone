@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
@@ -7,14 +7,8 @@ import Script from "next/script";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -29,8 +23,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${plusJakartaSans.variable} ${geistMono.variable}`}>
-        <body className="font-sans antialiased bg-[#0a0a0f] min-h-screen">
+      <html lang="en">
+        <body className={`${plusJakartaSans.className} antialiased bg-[#0a0a0f] min-h-screen`}>
           <Navbar />
           {children}
           <Toaster />
