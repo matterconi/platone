@@ -252,58 +252,39 @@ const Agent = ({
             </div>
           </div>
 
-          {/* Textarea + hints side by side */}
-          <div className="grid grid-cols-[1fr_196px] gap-4 items-start max-sm:grid-cols-1">
-            <div className="flex flex-col gap-2">
-              <InterviewInput
-                value={userMessage}
-                onChange={(v) => { setUserMessage(v); setInputError(null); }}
-                disabled={false}
-              />
-              {inputError && (
-                <p className="text-red-400 text-sm">{inputError}</p>
-              )}
-              {suggestions && suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {suggestions.map((s, i) => {
-                    const label = [s.level, s.role].filter(Boolean).join(" ");
-                    const tech = s.techstack?.slice(0, 2).join(", ");
-                    const chipText = `${label}${tech ? ` · ${tech}` : ""}`;
-                    const fillText = `Voglio un'intervista ${s.type || "tecnica"} da ${s.level} ${s.role}${s.techstack?.length ? ` con ${s.techstack.join(", ")}` : ""}`.trim();
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => { setUserMessage(fillText); setInputError(null); }}
-                        className="text-xs px-3 py-1.5 rounded-full bg-[#0E0F16] border border-[#252736] text-slate-400 hover:border-slate-600 hover:text-slate-200 transition-colors cursor-pointer"
-                      >
-                        {chipText}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Hints panel */}
-            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#0C0D14] border border-[#1E2030]">
-              <p className="text-slate-300 text-[11px] font-semibold uppercase tracking-widest">
-                Come scrivere il prompt
-              </p>
-              <div className="flex flex-col gap-2.5">
-                {[
-                  { label: "Ruolo", example: "senior frontend developer" },
-                  { label: "Tipo", example: "tecnica · HR · misto" },
-                  { label: "Stack", example: "React, TypeScript" },
-                  { label: "Focus", example: "performance, architettura" },
-                ].map(({ label, example }) => (
-                  <div key={label} className="flex flex-col gap-0.5">
-                    <span className="text-slate-400 text-[11px] font-semibold">{label}</span>
-                    <span className="text-slate-600 text-[11px] leading-snug">{example}</span>
-                  </div>
-                ))}
+          {/* Textarea */}
+          <div className="flex flex-col gap-3">
+            <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
+              Descrivi il ruolo e il contesto
+            </p>
+            <InterviewInput
+              value={userMessage}
+              onChange={(v) => { setUserMessage(v); setInputError(null); }}
+              disabled={false}
+            />
+            {inputError && (
+              <p className="text-red-400 text-sm">{inputError}</p>
+            )}
+            {suggestions && suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((s, i) => {
+                  const label = [s.level, s.role].filter(Boolean).join(" ");
+                  const tech = s.techstack?.slice(0, 2).join(", ");
+                  const chipText = `${label}${tech ? ` · ${tech}` : ""}`;
+                  const fillText = `Voglio un'intervista ${s.type || "tecnica"} da ${s.level} ${s.role}${s.techstack?.length ? ` con ${s.techstack.join(", ")}` : ""}`.trim();
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => { setUserMessage(fillText); setInputError(null); }}
+                      className="text-xs px-3 py-1.5 rounded-full bg-[#0E0F16] border border-[#252736] text-slate-400 hover:border-slate-600 hover:text-slate-200 transition-colors cursor-pointer"
+                    >
+                      {chipText}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
