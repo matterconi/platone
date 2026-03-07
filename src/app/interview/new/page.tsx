@@ -44,15 +44,12 @@ const NewInterviewPage = async () => {
     <div className="flex flex-col gap-10 px-6 py-14 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <span className="self-start text-violet-300 text-[11px] font-semibold tracking-widest uppercase">
-          Nuova intervista
-        </span>
-        <h1 className="text-indigo-50 text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
+        <h1 className="text-slate-50 text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
           Di cosa vuoi essere<br className="hidden sm:block" /> intervistato?
         </h1>
-        <p className="text-indigo-400 text-base leading-relaxed max-w-lg">
-          Descrivi il ruolo e il contesto — l&apos;AI genererà le domande giuste
-          e ti condurrà l&apos;intervista via voce.
+        <p className="text-slate-400 text-base leading-relaxed max-w-lg">
+          Scegli il tuo intervistatore e descrivi il ruolo — l&apos;AI genererà
+          le domande giuste e ti condurrà l&apos;intervista via voce.
         </p>
       </div>
 

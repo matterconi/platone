@@ -23,6 +23,8 @@ interface AgentConfig {
   assistantId: string;
   gradient: string;
   icon: string;
+  glow: string;
+  borderColor: string;
 }
 
 // TODO: replace assistantId values with real VAPI assistant IDs per agent
@@ -35,6 +37,8 @@ const AGENTS: AgentConfig[] = [
     assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
     gradient: "from-indigo-500 to-violet-600",
     icon: "🧑‍💻",
+    glow: "0 0 28px -4px rgba(99,102,241,0.45)",
+    borderColor: "rgba(99,102,241,0.45)",
   },
   {
     id: "hr",
@@ -44,6 +48,8 @@ const AGENTS: AgentConfig[] = [
     assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
     gradient: "from-violet-500 to-fuchsia-600",
     icon: "👩‍💼",
+    glow: "0 0 28px -4px rgba(139,92,246,0.45)",
+    borderColor: "rgba(139,92,246,0.45)",
   },
   {
     id: "mixed",
@@ -53,6 +59,8 @@ const AGENTS: AgentConfig[] = [
     assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
     gradient: "from-cyan-500 to-indigo-600",
     icon: "🎯",
+    glow: "0 0 28px -4px rgba(6,182,212,0.4)",
+    borderColor: "rgba(6,182,212,0.45)",
   },
 ];
 
@@ -221,15 +229,22 @@ const Agent = ({
                     key={agent.id}
                     type="button"
                     onClick={() => setSelectedAgent(agent)}
-                    className={`flex flex-col gap-3 p-4 rounded-2xl border text-left transition-all cursor-pointer group ${
+                    className={`flex flex-col gap-3 p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer group ${
                       isSelected
-                        ? "border-slate-500/40 bg-white/4 shadow-[0_0_20px_-4px_rgba(255,255,255,0.05)]"
-                        : "border-[#1E2030] bg-[#0C0D14] hover:border-slate-700/50 hover:bg-white/2"
+                        ? "bg-[#0E0F1A]"
+                        : "border-[#1A1B28] bg-[#0A0B10] hover:bg-[#0E0F1A]"
                     }`}
+                    style={isSelected ? {
+                      borderColor: agent.borderColor,
+                      boxShadow: agent.glow,
+                    } : undefined}
                   >
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-3">
-                      <div className={`size-10 rounded-xl bg-linear-to-br ${agent.gradient} flex items-center justify-center shrink-0 text-lg shadow-md`}>
+                      <div
+                        className={`size-10 rounded-xl bg-linear-to-br ${agent.gradient} flex items-center justify-center shrink-0 text-lg transition-all duration-200`}
+                        style={isSelected ? { boxShadow: agent.glow } : undefined}
+                      >
                         {agent.icon}
                       </div>
                       <div className="flex flex-col gap-0.5 min-w-0">
@@ -402,10 +417,10 @@ const Agent = ({
           <Button
             onClick={isCallActive ? handleStop : handleStart}
             disabled={isConnecting}
-            className={`min-w-48 rounded-full font-bold px-7 py-3 text-sm cursor-pointer transition-colors ${
+            className={`min-w-48 rounded-full font-bold px-7 py-3 text-sm cursor-pointer transition-all duration-200 ${
               isCallActive
-                ? "bg-red-400 hover:bg-red-600 text-white"
-                : "bg-green-400 hover:bg-green-500 active:bg-green-500 text-white"
+                ? "bg-red-500 hover:bg-red-600 text-white shadow-[0_0_24px_-4px_rgba(239,68,68,0.6)]"
+                : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_24px_-4px_rgba(16,185,129,0.55)] hover:shadow-[0_0_32px_-4px_rgba(16,185,129,0.7)]"
             }`}
           >
             {isCallActive
