@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
@@ -69,6 +70,8 @@ const Agent = ({
   mode = "new",
   redirectOnFinish,
   suggestions,
+  recentInterviews,
+  recentInterviewsLabel = "Le tue ultime interviste",
   interviewId,
   questions,
   role,
@@ -301,6 +304,61 @@ const Agent = ({
               </div>
             )}
           </div>
+
+          {/* Inspiration cards */}
+          {recentInterviews && recentInterviews.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
+                  {recentInterviewsLabel}
+                </p>
+                <Link
+                  href="/interview/guide"
+                  className="text-slate-500 text-xs hover:text-slate-300 transition-colors"
+                >
+                  Scopri come scrivere il prompt perfetto →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {recentInterviews.map((iv) => {
+                  const fillText = `Voglio un'intervista ${iv.type || "tecnica"} da ${iv.level} ${iv.role}${iv.techstack?.length ? ` con ${iv.techstack.join(", ")}` : ""}`.trim();
+                  const typeColors: Record<string, string> = {
+                    tecnico: "text-indigo-400",
+                    comportamentale: "text-violet-400",
+                    misto: "text-cyan-400",
+                    "case study": "text-amber-400",
+                  };
+                  const typeColor = typeColors[iv.type?.toLowerCase()] ?? "text-slate-400";
+                  return (
+                    <button
+                      key={iv.id}
+                      type="button"
+                      onClick={() => { setUserMessage(fillText); setInputError(null); }}
+                      className="flex flex-col gap-2 p-3 rounded-xl border border-[#1A1B28] bg-[#0A0B10] hover:border-slate-700/50 hover:bg-[#0E0F1A] text-left transition-all duration-150 cursor-pointer"
+                    >
+                      <p className="text-slate-200 text-xs font-semibold leading-snug line-clamp-2">
+                        {iv.level ? `${iv.level} ` : ""}{iv.role}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {iv.type && (
+                          <span className={`text-[10px] font-medium ${typeColor}`}>{iv.type}</span>
+                        )}
+                      </div>
+                      {iv.techstack?.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {iv.techstack.slice(0, 2).map((t) => (
+                            <span key={t} className="text-[10px] text-slate-600 bg-white/3 px-1.5 py-0.5 rounded ring-1 ring-white/5">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

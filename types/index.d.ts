@@ -89,12 +89,23 @@ interface InterviewSuggestion {
   techstack: string[];
 }
 
+interface RecentInterview {
+  id: string;
+  title?: string | null;
+  role: string;
+  type: string;
+  level: string;
+  techstack: string[];
+}
+
 interface AgentProps {
   userName: string;
   userId: string;
   mode?: "new" | "demo" | "try-again" | "change-questions";
   redirectOnFinish?: string;
   suggestions?: InterviewSuggestion[];
+  recentInterviews?: RecentInterview[];
+  recentInterviewsLabel?: string;
   // try-again
   interviewId?: string;
   questions?: string[];
