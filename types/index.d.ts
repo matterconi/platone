@@ -82,11 +82,19 @@ interface UserAccess {
   periodStart?: Date | null;
 }
 
+interface InterviewSuggestion {
+  role: string;
+  type: string;
+  level: string;
+  techstack: string[];
+}
+
 interface AgentProps {
   userName: string;
   userId: string;
   mode?: "new" | "demo" | "try-again" | "change-questions";
   redirectOnFinish?: string;
+  suggestions?: InterviewSuggestion[];
   // try-again
   interviewId?: string;
   questions?: string[];

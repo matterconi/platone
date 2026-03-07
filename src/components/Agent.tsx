@@ -19,6 +19,7 @@ const Agent = ({
   userName,
   mode = "new",
   redirectOnFinish,
+  suggestions,
   interviewId,
   questions,
   role,
@@ -164,7 +165,7 @@ const Agent = ({
     <div className="flex flex-col gap-8 w-full max-w-3xl mx-auto">
 
       {mode === "new" && callStatus === "inactive" && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           <InterviewInput
             value={userMessage}
             onChange={(v) => { setUserMessage(v); setInputError(null); }}
@@ -172,6 +173,31 @@ const Agent = ({
           />
           {inputError && (
             <p className="text-red-400 text-sm">{inputError}</p>
+          )}
+          {suggestions && suggestions.length > 0 && (
+            <div className="flex flex-col gap-2.5">
+              <p className="text-indigo-600 text-xs tracking-widest uppercase">
+                Ispirazione dalla community
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((s, i) => {
+                  const label = [s.level, s.role].filter(Boolean).join(" ");
+                  const tech = s.techstack?.slice(0, 2).join(", ");
+                  const chipText = `${label}${tech ? ` · ${tech}` : ""}`;
+                  const fillText = `Voglio un'intervista ${s.type || "tecnica"} da ${s.level} ${s.role}${s.techstack?.length ? ` con ${s.techstack.join(", ")}` : ""}`.trim();
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => { setUserMessage(fillText); setInputError(null); }}
+                      className="text-xs px-3 py-1.5 rounded-full bg-indigo-950/50 border border-indigo-800/30 text-indigo-400 hover:border-violet-500/40 hover:text-violet-300 transition-colors cursor-pointer"
+                    >
+                      {chipText}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}
