@@ -29,10 +29,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${plusJakartaSans.variable} ${geistMono.variable} font-sans antialiased bg-[#0a0a0f] min-h-screen`}
-        >
+      <html lang="en" className={`${plusJakartaSans.variable} ${geistMono.variable}`}>
+        <body className="font-sans antialiased bg-[#0a0a0f] min-h-screen">
           <Navbar />
           {children}
           <Toaster />
