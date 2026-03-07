@@ -1,14 +1,21 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
+import { initializePaddle, Paddle } from "@paddle/paddle-js";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
 const plans = [
   {
     name: "Casual",
-    price: "9,99",
+    price: "9.90",
+    credits: 100,
+    priceId: "pri_01kk1pndq89nmbytffssa8sejw",
     description: "Perfetto per chi vuole allenarsi occasionalmente.",
     features: [
-      "30 minuti di interview al mese",
+      "100 crediti al mese (~50 min)",
       "Feedback AI in tempo reale",
       "Storico delle interview",
       "Tutte le tipologie di interview",
@@ -18,10 +25,12 @@ const plans = [
   },
   {
     name: "Regular",
-    price: "14,99",
+    price: "14.90",
+    credits: 200,
+    priceId: "pri_01kk1pqm2pz7sq1z47ed04gqc2",
     description: "Il piano ideale per chi cerca lavoro attivamente.",
     features: [
-      "1 ora di interview al mese",
+      "200 crediti al mese (~100 min)",
       "Feedback AI in tempo reale",
       "Storico delle interview",
       "Tutte le tipologie di interview",
@@ -32,10 +41,12 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "29,99",
+    price: "24.99",
+    credits: 350,
+    priceId: "pri_01kk1ptvd4ky1wtrn44awc72cv",
     description: "Per professionisti che vogliono eccellere.",
     features: [
-      "3 ore di interview al mese",
+      "350 crediti al mese (~175 min)",
       "Feedback AI in tempo reale",
       "Storico delle interview",
       "Tutte le tipologie di interview",
@@ -48,6 +59,29 @@ const plans = [
 ];
 
 const PricingSection = () => {
+  const { user } = useUser();
+  const router = useRouter();
+  const [paddle, setPaddle] = useState<Paddle | undefined>();
+
+  useEffect(() => {
+    initializePaddle({
+      environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT as "sandbox" | "production",
+      token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
+    }).then(setPaddle);
+  }, []);
+
+  const handleCheckout = (priceId: string) => {
+    if (!user) {
+      router.push("/sign-up");
+      return;
+    }
+    paddle?.Checkout.open({
+      items: [{ priceId, quantity: 1 }],
+      customer: { email: user.primaryEmailAddress?.emailAddress ?? "" },
+      customData: { clerkUserId: user.id },
+    });
+  };
+
   return (
     <section className="flex flex-col gap-10">
       <div className="flex flex-col gap-3 text-center">
@@ -104,14 +138,14 @@ const PricingSection = () => {
 
               {/* CTA */}
               <Button
-                asChild
+                onClick={() => handleCheckout(plan.priceId)}
                 className={
                   plan.popular
                     ? "bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10 w-full! justify-center"
                     : "bg-zinc-800! text-violet-300! hover:bg-zinc-800/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10 w-full! justify-center"
                 }
               >
-                <Link href="/sign-up">{plan.cta}</Link>
+                {plan.cta}
               </Button>
             </div>
           </div>
