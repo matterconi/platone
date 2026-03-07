@@ -21,8 +21,8 @@ interface AgentConfig {
   specialty: string;
   description: string;
   assistantId: string;
-  color: string; // tailwind bg color for avatar
-  initials: string;
+  gradient: string;
+  icon: string;
 }
 
 // TODO: replace assistantId values with real VAPI assistant IDs per agent
@@ -33,8 +33,8 @@ const AGENTS: AgentConfig[] = [
     specialty: "Tecnico",
     description: "Algoritmi, system design e coding challenges",
     assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
-    color: "bg-indigo-500",
-    initials: "AL",
+    gradient: "from-indigo-500 to-violet-600",
+    icon: "🧑‍💻",
   },
   {
     id: "hr",
@@ -42,8 +42,8 @@ const AGENTS: AgentConfig[] = [
     specialty: "HR & Soft Skills",
     description: "Behavioral, cultura aziendale e comunicazione",
     assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
-    color: "bg-violet-500",
-    initials: "SO",
+    gradient: "from-violet-500 to-fuchsia-600",
+    icon: "👩‍💼",
   },
   {
     id: "mixed",
@@ -51,8 +51,8 @@ const AGENTS: AgentConfig[] = [
     specialty: "Misto",
     description: "Domande tecniche e comportamentali combinate",
     assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!,
-    color: "bg-cyan-600",
-    initials: "MA",
+    gradient: "from-cyan-500 to-indigo-600",
+    icon: "🎯",
   },
 ];
 
@@ -213,35 +213,52 @@ const Agent = ({
             <p className="text-indigo-500 text-xs tracking-widest uppercase">
               Scegli il tuo intervistatore
             </p>
-            <div className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
-              {AGENTS.map((agent) => (
-                <button
-                  key={agent.id}
-                  type="button"
-                  onClick={() => setSelectedAgent(agent)}
-                  className={`flex flex-col gap-3 p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                    selectedAgent.id === agent.id
-                      ? "border-violet-500/50 bg-violet-500/8"
-                      : "border-[#252736] bg-[#0E0F16] hover:border-indigo-700/50"
-                  }`}
-                >
-                  <div className={`size-10 rounded-full ${agent.color} flex items-center justify-center shrink-0`}>
-                    <span className="text-white text-xs font-bold">{agent.initials}</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-2">
-                      <p className="text-indigo-100 font-semibold text-sm">{agent.name}</p>
-                      {selectedAgent.id === agent.id && (
-                        <span className="text-[10px] text-violet-300 font-medium bg-violet-500/15 px-1.5 py-0.5 rounded-full">
-                          Selezionato
-                        </span>
+            <div className="flex flex-col gap-2.5">
+              {AGENTS.map((agent) => {
+                const isSelected = selectedAgent.id === agent.id;
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => setSelectedAgent(agent)}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border text-left transition-all cursor-pointer group ${
+                      isSelected
+                        ? "border-violet-500/40 bg-violet-500/8 shadow-[0_0_24px_-4px_rgba(139,92,246,0.15)]"
+                        : "border-[#1E2030] bg-[#0C0D14] hover:border-indigo-700/40 hover:bg-indigo-950/30"
+                    }`}
+                  >
+                    {/* Avatar */}
+                    <div className={`size-12 rounded-xl bg-linear-to-br ${agent.gradient} flex items-center justify-center shrink-0 text-xl shadow-lg`}>
+                      {agent.icon}
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-indigo-50 font-semibold text-sm">{agent.name}</p>
+                        {isSelected && (
+                          <span className="text-[10px] text-violet-300 font-semibold bg-violet-500/15 px-2 py-0.5 rounded-full border border-violet-500/20">
+                            Selezionato
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-violet-300 text-xs font-medium">{agent.specialty}</p>
+                      <p className="text-indigo-500 text-xs leading-relaxed truncate">{agent.description}</p>
+                    </div>
+
+                    {/* Check indicator */}
+                    <div className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                      isSelected ? "border-violet-500 bg-violet-500" : "border-[#2A2D3E] group-hover:border-indigo-600"
+                    }`}>
+                      {isSelected && (
+                        <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
                       )}
                     </div>
-                    <p className="text-violet-300/80 text-xs">{agent.specialty}</p>
-                  </div>
-                  <p className="text-indigo-600 text-xs leading-relaxed">{agent.description}</p>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -255,9 +272,6 @@ const Agent = ({
           )}
           {suggestions && suggestions.length > 0 && (
             <div className="flex flex-col gap-2.5">
-              <p className="text-indigo-600 text-xs tracking-widest uppercase">
-                Ispirazione dalla community
-              </p>
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((s, i) => {
                   const label = [s.level, s.role].filter(Boolean).join(" ");
@@ -375,18 +389,20 @@ const Agent = ({
 
       {/* Status + Bottone */}
       <div className="flex flex-col items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span
-            className={`size-2 rounded-full ${
-              isCallActive
-                ? "bg-green-400 animate-pulse"
-                : isConnecting
-                ? "bg-yellow-400 animate-pulse"
-                : "bg-indigo-600"
-            }`}
-          />
-          <span className="text-indigo-400 text-sm">{statusLabel}</span>
-        </div>
+        {(isCallActive || isConnecting || isFinished) && (
+          <div className="flex items-center gap-2">
+            <span
+              className={`size-2 rounded-full ${
+                isCallActive
+                  ? "bg-green-400 animate-pulse"
+                  : isConnecting
+                  ? "bg-yellow-400 animate-pulse"
+                  : "bg-indigo-600"
+              }`}
+            />
+            <span className="text-indigo-400 text-sm">{statusLabel}</span>
+          </div>
+        )}
 
         {!isFinished ? (
           <Button
