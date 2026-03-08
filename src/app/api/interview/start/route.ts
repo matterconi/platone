@@ -194,29 +194,23 @@ Conduct the session:
   if (systemPrompt) variableValues.systemPrompt = systemPrompt;
 
   // Create web call via VAPI REST API — maxDurationSeconds enforced server-side
-  const vapiPrivateKey = process.env.VAPI_PRIVATE_KEY;
   const resolvedAssistantId = assistantId ?? process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
   const vapiBody = {
     assistantId: resolvedAssistantId,
     assistantOverrides: { maxDurationSeconds, variableValues },
   };
-  console.log("[VAPI] key present:", !!vapiPrivateKey, "| key prefix:", vapiPrivateKey?.slice(0, 8));
-  console.log("[VAPI] assistantId:", resolvedAssistantId);
-  console.log("[VAPI] maxDurationSeconds:", maxDurationSeconds);
-  console.log("[VAPI] body:", JSON.stringify(vapiBody));
 
   const vapiRes = await fetch("https://api.vapi.ai/call/web", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${vapiPrivateKey}`,
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(vapiBody),
   });
 
   if (!vapiRes.ok) {
-    const errText = await vapiRes.text();
-    console.error("[VAPI] call creation failed — status:", vapiRes.status, "| body:", errText);
+    console.error("VAPI call creation failed:", await vapiRes.text());
     return Response.json({ error: "Impossibile avviare la call." }, { status: 502 });
   }
 
