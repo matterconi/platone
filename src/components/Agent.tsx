@@ -140,13 +140,32 @@ const Agent = ({
     setIsGenerating(true);
 
     const token = await getToken();
+
+    // Build mode-specific extra variables
+    const extraVariables: Record<string, string> = {};
+    if (mode === "try-again" && interviewId && questions) {
+      extraVariables.interviewId = interviewId;
+      extraVariables.questions = JSON.stringify(questions);
+    } else if (mode === "change-questions") {
+      if (role) extraVariables.role = role;
+      if (level) extraVariables.level = level;
+      if (type) extraVariables.type = type;
+      if (techstack) extraVariables.techstack = techstack.join(", ");
+      if (specialization) extraVariables.specialization = specialization;
+    }
+
     const res = await fetch("/api/interview/start", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userMessage: mode === "new" ? userMessage : "" }),
+      body: JSON.stringify({
+        userMessage: mode === "new" ? userMessage : "",
+        assistantId: selectedAgent.assistantId,
+        userName,
+        extraVariables,
+      }),
     });
 
     const data = await res.json();
@@ -159,44 +178,8 @@ const Agent = ({
     }
 
     setIsGenerating(false);
-    const { systemPrompt, duration, title } = data;
-
-    const questionMap = { quick: 3, regular: 5, long: 7 };
-    const numQuestions = questionMap[duration as keyof typeof questionMap] ?? 5;
-
-    const variableValues: Record<string, string> = { userName, numQuestions: String(numQuestions) };
-
-    if (systemPrompt) variableValues.systemPrompt = systemPrompt;
-
-    if (mode === "try-again" && interviewId && questions) {
-      variableValues.interviewId = interviewId;
-      variableValues.questions = JSON.stringify(questions);
-    } else if (mode === "change-questions") {
-      if (role) variableValues.role = role;
-      if (level) variableValues.level = level;
-      if (type) variableValues.type = type;
-      if (techstack) variableValues.techstack = techstack.join(", ");
-      if (specialization) variableValues.specialization = specialization;
-    }
-
-    const call = await vapiRef.current?.start(
-      selectedAgent.assistantId,
-      {
-        maxDurationSeconds: 3600,
-        variableValues,
-      }
-    );
-
-    if (call?.id) {
-      await fetch("/api/interview/register-call", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ callId: call.id, title }),
-      });
-    }
+    // Server created the VAPI call with maxDurationSeconds enforced — just reconnect
+    await vapiRef.current?.reconnect(data.webCall);
   };
 
   const handleStop = () => {

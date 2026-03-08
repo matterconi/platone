@@ -3,7 +3,8 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
 import { z } from "zod";
 import sql from "@/lib/db";
-import { getUserAccess, getRemainingSeconds } from "@/lib/subscription";
+import { getUserAccess } from "@/lib/subscription";
+import { getCreditsPerMinute } from "@/lib/credits";
 
 const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY! });
 
@@ -74,15 +75,25 @@ export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
+  const body = await req.json().catch(() => ({}));
+  const userMessage: string = body.userMessage ?? "";
+  const assistantId: string | undefined = body.assistantId;
+  const userName: string = body.userName ?? "";
+  // Mode-specific variableValues (optional — VAPI asks for missing data during the call)
+  const extraVariables: Record<string, string> = body.extraVariables ?? {};
+
   const access = await getUserAccess(userId);
   let isTrial = false;
+  let maxDurationSeconds: number;
 
   if (access.hasActiveSubscription && access.plan) {
-    // Subscribed user: check at least 1 minute of credits remaining
-    const remaining = await getRemainingSeconds(userId);
-    if (remaining < 60) {
+    // Subscribed user: compute max duration from actual credits and assistant rate
+    const creditsPerMinute = getCreditsPerMinute(assistantId);
+    const remainingSeconds = Math.floor(access.credits / creditsPerMinute) * 60;
+    if (remainingSeconds < 60) {
       return Response.json({ error: "Hai esaurito i crediti del piano corrente." }, { status: 403 });
     }
+    maxDurationSeconds = remainingSeconds;
   } else {
     // No active subscription: allow only one free trial
     if (access.trialUsed) {
@@ -91,12 +102,10 @@ export async function POST(req: Request) {
     // Mark trial as used immediately to prevent concurrent starts
     await sql`UPDATE users SET trial_used = TRUE WHERE id = ${userId}`;
     isTrial = true;
+    maxDurationSeconds = 300; // 5 min cap for trial
   }
 
-  const body = await req.json().catch(() => ({}));
-  const userMessage: string = body.userMessage ?? "";
-
-  // Trial: use simplified prompt, skip extras query
+  // Generate systemPrompt via Deepseek
   let systemContent: string;
   if (isTrial) {
     systemContent = TRIAL_META_PROMPT;
@@ -126,9 +135,50 @@ export async function POST(req: Request) {
     return Response.json({ error: object.reason }, { status: 422 });
   }
 
+  // Build variableValues server-side (client never passes maxDurationSeconds to VAPI)
+  const duration = object.duration ?? "regular";
+  const questionMap = { quick: 3, regular: 5, long: 7 };
+  const numQuestions = questionMap[duration as keyof typeof questionMap] ?? 5;
+
+  const variableValues: Record<string, string> = {
+    userName,
+    numQuestions: String(numQuestions),
+    ...extraVariables,
+  };
+  if (object.systemPrompt) variableValues.systemPrompt = object.systemPrompt;
+
+  // Create web call via VAPI REST API — maxDurationSeconds enforced server-side
+  const vapiRes = await fetch("https://api.vapi.ai/call/web", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.VAPI_PRIVATE_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      assistantId: assistantId ?? process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
+      assistantOverrides: { maxDurationSeconds, variableValues },
+    }),
+  });
+
+  if (!vapiRes.ok) {
+    console.error("VAPI call creation failed:", await vapiRes.text());
+    return Response.json({ error: "Impossibile avviare la call." }, { status: 502 });
+  }
+
+  const vapiCall = await vapiRes.json();
+  const callId: string = vapiCall.id;
+  const webCallUrl: string = vapiCall.webCallUrl ?? vapiCall.transport?.callUrl;
+
+  // Register session in DB (replaces the separate register-call step)
+  await sql`
+    INSERT INTO interview_sessions (call_id, user_id, title)
+    VALUES (${callId}, ${userId}, ${object.title ?? null})
+    ON CONFLICT (call_id) DO NOTHING
+  `;
+
   return Response.json({
-    systemPrompt: object.systemPrompt,
-    duration: object.duration ?? "regular",
+    webCall: { id: callId, webCallUrl },
+    duration,
     title: object.title ?? null,
   });
 }
