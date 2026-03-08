@@ -77,6 +77,7 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const userMessage: string = body.userMessage ?? "";
+  const mode: string = body.mode ?? "new";
   const assistantId: string | undefined = body.assistantId;
   const userName: string = body.userName ?? "";
   // Mode-specific variableValues (optional — VAPI asks for missing data during the call)
@@ -105,47 +106,92 @@ export async function POST(req: Request) {
     maxDurationSeconds = 300; // 5 min cap for trial
   }
 
-  // Generate systemPrompt via Deepseek
-  let systemContent: string;
-  if (isTrial) {
-    systemContent = TRIAL_META_PROMPT;
+  // Build systemPrompt and session metadata
+  let systemPrompt: string;
+  let duration: "quick" | "regular" | "long";
+  let title: string | null;
+
+  if (mode === "try-again" && extraVariables.questions) {
+    // Retry: generate systemPrompt directly — no Deepseek needed
+    const questions = JSON.parse(extraVariables.questions) as string[];
+    const questionsList = questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+    const contextLine = [extraVariables.level, extraVariables.role, extraVariables.type]
+      .filter(Boolean).join(" · ");
+
+    systemPrompt = `You are an expert AI voice interviewer conducting a retry practice session.
+${contextLine ? `Context: ${contextLine}` : ""}${extraVariables.techstack ? `\nTech stack: ${extraVariables.techstack}` : ""}
+
+The candidate wants to practice these ${questions.length} questions again:
+${questionsList}
+
+Conduct the session:
+- Ask each question one at a time, in order.
+- After the candidate answers, give 1-2 sentences of focused, encouraging feedback.
+- Keep every response under 30 seconds of speech.
+- After the last question and feedback, thank the candidate.
+- Immediately call save_attempt with: the interviewId (${extraVariables.interviewId ?? ""}), a structured evaluation (domainKnowledge 1-10, problemSolving 1-10, communication 1-10, estimatedSeniority, strengths array, weaknesses array, improvementPlan array).`;
+
+    const q = questions.length;
+    duration = q <= 3 ? "quick" : q <= 5 ? "regular" : "long";
+    title = extraVariables.role ? `Retry · ${extraVariables.role}` : "Retry";
   } else {
-    const extrasRows = await sql`
-      SELECT DISTINCT jsonb_object_keys(data->'extras') AS key
-      FROM interviews
-      WHERE user_id = ${userId} AND data->'extras' IS NOT NULL
-    `.catch(() => []);
-    const existingExtrasKeys = extrasRows.map((r) => (r as { key: string }).key);
-    systemContent = existingExtrasKeys.length > 0
-      ? `${META_PROMPT}\n\nExtras keys already used in this user's history (prefer reusing these for consistency): ${existingExtrasKeys.join(", ")}`
-      : META_PROMPT;
-  }
+    // New or change-questions: use Deepseek to generate systemPrompt
+    let deepseekUserMessage = userMessage;
 
-  const { object } = await generateObject({
-    model: deepseek("deepseek-chat"),
-    output: "object",
-    schema: resultSchema,
-    messages: [
-      { role: "system", content: systemContent },
-      { role: "user", content: userMessage || "" },
-    ],
-  });
+    if (mode === "change-questions" && !userMessage) {
+      // Reconstruct context as userMessage so Deepseek generates new questions for the same role
+      const parts = [extraVariables.level, extraVariables.role].filter(Boolean).join(" ");
+      deepseekUserMessage = [
+        parts && `Voglio un'intervista${extraVariables.type ? ` ${extraVariables.type}` : ""} da ${parts}`,
+        extraVariables.techstack && `con ${extraVariables.techstack}`,
+        extraVariables.specialization,
+      ].filter(Boolean).join(" ").trim();
+    }
 
-  if (!object.valid) {
-    return Response.json({ error: object.reason }, { status: 422 });
+    let systemContent: string;
+    if (isTrial) {
+      systemContent = TRIAL_META_PROMPT;
+    } else {
+      const extrasRows = await sql`
+        SELECT DISTINCT jsonb_object_keys(data->'extras') AS key
+        FROM interviews
+        WHERE user_id = ${userId} AND data->'extras' IS NOT NULL
+      `.catch(() => []);
+      const existingExtrasKeys = extrasRows.map((r) => (r as { key: string }).key);
+      systemContent = existingExtrasKeys.length > 0
+        ? `${META_PROMPT}\n\nExtras keys already used in this user's history (prefer reusing these for consistency): ${existingExtrasKeys.join(", ")}`
+        : META_PROMPT;
+    }
+
+    const { object } = await generateObject({
+      model: deepseek("deepseek-chat"),
+      output: "object",
+      schema: resultSchema,
+      messages: [
+        { role: "system", content: systemContent },
+        { role: "user", content: deepseekUserMessage || "" },
+      ],
+    });
+
+    if (!object.valid) {
+      return Response.json({ error: object.reason }, { status: 422 });
+    }
+
+    systemPrompt = object.systemPrompt ?? "";
+    duration = object.duration ?? "regular";
+    title = object.title ?? null;
   }
 
   // Build variableValues server-side (client never passes maxDurationSeconds to VAPI)
-  const duration = object.duration ?? "regular";
   const questionMap = { quick: 3, regular: 5, long: 7 };
-  const numQuestions = questionMap[duration as keyof typeof questionMap] ?? 5;
+  const numQuestions = questionMap[duration] ?? 5;
 
   const variableValues: Record<string, string> = {
     userName,
     numQuestions: String(numQuestions),
     ...extraVariables,
   };
-  if (object.systemPrompt) variableValues.systemPrompt = object.systemPrompt;
+  if (systemPrompt) variableValues.systemPrompt = systemPrompt;
 
   // Create web call via VAPI REST API — maxDurationSeconds enforced server-side
   const vapiRes = await fetch("https://api.vapi.ai/call/web", {
@@ -172,13 +218,13 @@ export async function POST(req: Request) {
   // Register session in DB (replaces the separate register-call step)
   await sql`
     INSERT INTO interview_sessions (call_id, user_id, title)
-    VALUES (${callId}, ${userId}, ${object.title ?? null})
+    VALUES (${callId}, ${userId}, ${title})
     ON CONFLICT (call_id) DO NOTHING
   `;
 
   return Response.json({
     webCall: { id: callId, webCallUrl },
     duration,
-    title: object.title ?? null,
+    title,
   });
 }

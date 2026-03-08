@@ -142,6 +142,58 @@ describe("validazione AI", () => {
   });
 });
 
+// ─── Try-again (no Deepseek) ──────────────────────────────────────────────────
+
+describe("try-again", () => {
+  it("restituisce 200 e non chiama Deepseek", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: "user_123" });
+    mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: true, plan: "pro", credits: 100 });
+    mockSql.mockResolvedValueOnce([]); // interview_sessions insert
+    mockVapiSuccess();
+
+    const req = makeRequest({
+      mode: "try-again",
+      extraVariables: {
+        interviewId: "iv_abc",
+        questions: JSON.stringify(["Domanda 1", "Domanda 2", "Domanda 3"]),
+        role: "Frontend Developer",
+        level: "Senior",
+        type: "tecnico",
+      },
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockGenerateObject).not.toHaveBeenCalled(); // Deepseek saltato
+    const body = await res.json();
+    expect(body.webCall).toBeDefined();
+    expect(body.title).toBe("Retry · Frontend Developer");
+    expect(body.duration).toBe("quick"); // 3 domande → quick
+  });
+
+  it("restituisce 200 con 5 domande e duration regular", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: "user_123" });
+    mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: true, plan: "pro", credits: 100 });
+    mockSql.mockResolvedValueOnce([]);
+    mockVapiSuccess();
+
+    const req = makeRequest({
+      mode: "try-again",
+      extraVariables: {
+        interviewId: "iv_abc",
+        questions: JSON.stringify(["Q1", "Q2", "Q3", "Q4", "Q5"]),
+      },
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockGenerateObject).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.duration).toBe("regular");
+    expect(body.title).toBe("Retry");
+  });
+});
+
 // ─── VAPI failure ─────────────────────────────────────────────────────────────
 
 describe("VAPI error", () => {

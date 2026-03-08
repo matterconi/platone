@@ -146,6 +146,12 @@ const Agent = ({
     if (mode === "try-again" && interviewId && questions) {
       extraVariables.interviewId = interviewId;
       extraVariables.questions = JSON.stringify(questions);
+      // Include context so server can generate the retry prompt without a DB lookup
+      if (role) extraVariables.role = role;
+      if (level) extraVariables.level = level;
+      if (type) extraVariables.type = type;
+      if (techstack) extraVariables.techstack = techstack.join(", ");
+      if (specialization) extraVariables.specialization = specialization;
     } else if (mode === "change-questions") {
       if (role) extraVariables.role = role;
       if (level) extraVariables.level = level;
@@ -162,6 +168,7 @@ const Agent = ({
       },
       body: JSON.stringify({
         userMessage: mode === "new" ? userMessage : "",
+        mode,
         assistantId: selectedAgent.assistantId,
         userName,
         extraVariables,
