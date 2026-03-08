@@ -13,7 +13,7 @@ const plans = [
     price: "9.90",
     credits: 100,
     minutes: 50,
-    priceId: "pri_01kk1pndq89nmbytffssa8sejw",
+    priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_CASUAL!,
     description: "Per chi si allena ogni tanto.",
     features: [
       "100 crediti / mese (~50 min)",
@@ -29,7 +29,7 @@ const plans = [
     price: "14.90",
     credits: 200,
     minutes: 100,
-    priceId: "pri_01kk1pqm2pz7sq1z47ed04gqc2",
+    priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_REGULAR!,
     description: "Ideale per chi cerca lavoro attivamente.",
     features: [
       "200 crediti / mese (~100 min)",
@@ -46,7 +46,7 @@ const plans = [
     price: "24.99",
     credits: 350,
     minutes: 175,
-    priceId: "pri_01kk1ptvd4ky1wtrn44awc72cv",
+    priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO!,
     description: "Per professionisti che vogliono eccellere.",
     features: [
       "350 crediti / mese (~175 min)",
@@ -67,10 +67,15 @@ const PricingSection = () => {
   const [paddle, setPaddle] = useState<Paddle | undefined>();
 
   useEffect(() => {
-    initializePaddle({
-      environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT as "sandbox" | "production",
-      token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-    }).then(setPaddle);
+    const env = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT as "sandbox" | "production";
+    const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+    console.log("[Paddle] init — environment:", env, "| token:", token ? token.slice(0, 12) + "…" : "MISSING");
+    initializePaddle({ environment: env, token: token! })
+      .then((p) => {
+        console.log("[Paddle] initialized:", !!p);
+        setPaddle(p);
+      })
+      .catch((err) => console.error("[Paddle] init error:", err));
   }, []);
 
   const handleCheckout = (priceId: string) => {
@@ -78,11 +83,18 @@ const PricingSection = () => {
       router.push("/sign-up");
       return;
     }
-    paddle?.Checkout.open({
+    const email = user.primaryEmailAddress?.emailAddress ?? "";
+    const payload = {
       items: [{ priceId, quantity: 1 }],
-      customer: { email: user.primaryEmailAddress?.emailAddress ?? "" },
+      customer: { email },
       customData: { clerkUserId: user.id },
-    });
+    };
+    console.log("[Paddle] Checkout.open payload:", JSON.stringify(payload));
+    if (!paddle) {
+      console.error("[Paddle] paddle instance is undefined");
+      return;
+    }
+    paddle.Checkout.open(payload);
   };
 
   return (
