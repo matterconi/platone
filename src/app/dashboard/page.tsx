@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const transactions: Transaction[] = [];
   if (access.paddleCustomerId) {
     try {
-      for await (const tx of paddle.transactions.list({ customerId: [access.paddleCustomerId] })) {
+      for await (const tx of paddle.transactions.list({ customerId: [access.paddleCustomerId], status: ["completed"] })) {
         transactions.push({
           id: tx.id,
           createdAt: tx.createdAt ?? "",
