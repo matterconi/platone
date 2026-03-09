@@ -212,7 +212,7 @@ Conduct the session:
   const resolvedAssistantId = assistantId ?? process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
   const vapiBody = {
     assistantId: resolvedAssistantId,
-    assistantOverrides: { maxDurationSeconds, variableValues },
+    assistantOverrides: { maxDurationSeconds: 30, variableValues },
   };
 
   const vapiRes = await fetch("https://api.vapi.ai/call/web", {
@@ -244,5 +244,6 @@ Conduct the session:
     webCall: { id: callId, webCallUrl },
     duration,
     title,
+    maxDurationSeconds,
   });
 }

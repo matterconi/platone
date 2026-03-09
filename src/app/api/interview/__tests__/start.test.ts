@@ -6,6 +6,13 @@ vi.mock("@/lib/db", () => ({ default: vi.fn() }));
 vi.mock("@/lib/subscription", () => ({ getUserAccess: vi.fn() }));
 vi.mock("@ai-sdk/deepseek", () => ({ createDeepSeek: vi.fn(() => vi.fn()) }));
 vi.mock("ai", () => ({ generateObject: vi.fn() }));
+vi.mock("jose", () => ({
+  SignJWT: vi.fn().mockImplementation(() => ({
+    setProtectedHeader: vi.fn().mockReturnThis(),
+    setExpirationTime: vi.fn().mockReturnThis(),
+    sign: vi.fn().mockResolvedValue("mocked-jwt-token"),
+  })),
+}));
 
 // — Import dei moduli mockati —
 import { auth } from "@clerk/nextjs/server";
@@ -40,6 +47,8 @@ function mockVapiSuccess() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  process.env.VAPI_PRIVATE_KEY = "sk-test";
+  process.env.VAPI_ORG_ID = "org-test";
 });
 
 // ─── Autenticazione ───────────────────────────────────────────────────────────
