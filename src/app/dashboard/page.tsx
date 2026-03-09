@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { Paddle } from "@paddle/paddle-node-sdk";
+import { Paddle, Environment } from "@paddle/paddle-node-sdk";
 import { getUserAccess } from "@/lib/subscription";
 import { Button } from "@/components/ui/button";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import Interviews from "@/components/Interviews";
 
-const paddle = new Paddle(process.env.PADDLE_API_KEY!);
+const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
+  environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === "sandbox"
+    ? Environment.sandbox
+    : Environment.production,
+});
 
 export default async function DashboardPage() {
   const { userId } = await auth();

@@ -1,10 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
-import { Paddle } from "@paddle/paddle-node-sdk";
+import { Paddle, Environment } from "@paddle/paddle-node-sdk";
 import sql from "@/lib/db";
 import { cancelSubscription } from "@/lib/billing";
 import { PLAN_CREDITS } from "@/lib/credits";
 
-const paddle = new Paddle(process.env.PADDLE_API_KEY!);
+const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
+  environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === "sandbox"
+    ? Environment.sandbox
+    : Environment.production,
+});
 
 // Reverse map: credits amount → plan name
 const CREDITS_TO_PLAN: Record<number, string> = Object.fromEntries(

@@ -1,14 +1,23 @@
-import { Paddle, EventName } from "@paddle/paddle-node-sdk";
+import { Paddle, Environment, EventName } from "@paddle/paddle-node-sdk";
 import { NextRequest } from "next/server";
-import sql from "@/lib/db";
 import { PLAN_CREDITS } from "@/lib/credits";
+import {
+  applyTransaction,
+  scheduleCancel,
+  scheduleDowngrade,
+  cancelSubscription,
+} from "@/lib/billing";
 
-const paddle = new Paddle(process.env.PADDLE_API_KEY!);
+const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
+  environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === "sandbox"
+    ? Environment.sandbox
+    : Environment.production,
+});
 
 const PRICE_TO_PLAN: Record<string, string> = {
-  pri_01kk1pndq89nmbytffssa8sejw: "casual",
-  pri_01kk1pqm2pz7sq1z47ed04gqc2: "regular",
-  pri_01kk1ptvd4ky1wtrn44awc72cv: "pro",
+  [process.env.NEXT_PUBLIC_PADDLE_PRICE_CASUAL!]: "casual",
+  [process.env.NEXT_PUBLIC_PADDLE_PRICE_REGULAR!]: "regular",
+  [process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO!]: "pro",
 };
 
 export async function POST(request: NextRequest) {
@@ -33,35 +42,20 @@ export async function POST(request: NextRequest) {
       const plan = priceId ? PRICE_TO_PLAN[priceId] : null;
       const credits = plan ? PLAN_CREDITS[plan] : null;
 
-      if (!clerkUserId || !plan || credits == null) {
+      if (!clerkUserId || !tx.customerId || !plan || credits == null) {
         console.warn("transaction.completed: dati mancanti", { clerkUserId, priceId, plan });
         break;
       }
 
-      await sql`
-        UPDATE users
-        SET paddle_customer_id = ${tx.customerId}, credits = credits + ${credits}
-        WHERE id = ${clerkUserId}
-      `;
-
-      await sql`
-        INSERT INTO subscriptions (user_id, plan, status, paddle_subscription_id, last_paid_at)
-        VALUES (${clerkUserId}, ${plan}, ${'active'}, ${tx.subscriptionId}, NOW())
-        ON CONFLICT (paddle_subscription_id)
-        DO UPDATE SET plan = ${plan}, status = ${'active'}, last_paid_at = NOW(), next_plan = NULL
-      `;
+      await applyTransaction(clerkUserId, tx.customerId, plan, credits, tx.subscriptionId);
       break;
     }
 
     case EventName.SubscriptionUpdated: {
       const sub = event.data;
 
-      if (sub.scheduledChange?.action === 'cancel') {
-        await sql`
-          UPDATE subscriptions
-          SET next_plan = ${'cancelled'}
-          WHERE paddle_subscription_id = ${sub.id}
-        `;
+      if (sub.scheduledChange?.action === "cancel") {
+        await scheduleCancel(sub.id);
         break;
       }
 
@@ -69,22 +63,13 @@ export async function POST(request: NextRequest) {
       const nextPlan = priceId ? PRICE_TO_PLAN[priceId] : null;
       if (!nextPlan) break;
 
-      await sql`
-        UPDATE subscriptions
-        SET next_plan = ${nextPlan}
-        WHERE paddle_subscription_id = ${sub.id}
-        AND plan != ${nextPlan}
-      `;
+      await scheduleDowngrade(sub.id, nextPlan);
       break;
     }
 
     case EventName.SubscriptionCanceled: {
       const sub = event.data;
-      await sql`
-        UPDATE subscriptions
-        SET status = ${'cancelled'}
-        WHERE paddle_subscription_id = ${sub.id}
-      `;
+      await cancelSubscription(sub.id);
       break;
     }
   }
