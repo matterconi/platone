@@ -49,12 +49,15 @@ export default async function DashboardPage() {
   if (access.paddleSubscriptionId) {
     try {
       const sub = await paddle.subscriptions.get(access.paddleSubscriptionId);
+      console.log("[dashboard] sub.status:", sub.status, "| nextBilledAt:", sub.nextBilledAt, "| billingPeriod.endsAt:", sub.currentBillingPeriod?.endsAt);
       const unitPrice = sub.items[0]?.price?.unitPrice;
       const price = unitPrice
         ? `${unitPrice.currencyCode} ${(parseInt(unitPrice.amount) / 100).toFixed(2)}`
         : null;
+      // nextBilledAt can be null in sandbox — fall back to currentBillingPeriod.endsAt
+      const nextBilledAt = sub.nextBilledAt ?? sub.currentBillingPeriod?.endsAt ?? null;
       renewalInfo = {
-        nextBilledAt: sub.nextBilledAt ?? null,
+        nextBilledAt,
         scheduledChange: sub.scheduledChange
           ? { action: sub.scheduledChange.action, effectiveAt: sub.scheduledChange.effectiveAt }
           : null,
