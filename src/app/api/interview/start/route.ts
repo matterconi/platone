@@ -101,8 +101,15 @@ export async function POST(req: Request) {
     if (access.trialUsed) {
       return Response.json({ error: "Il tuo trial gratuito è stato utilizzato. Scegli un piano per continuare." }, { status: 403 });
     }
-    // Mark trial as used immediately to prevent concurrent starts
-    await sql`UPDATE users SET trial_used = TRUE WHERE id = ${userId}`;
+    // Atomic update — prevents concurrent trial starts (race condition fix)
+    const [updated] = await sql`
+      UPDATE users SET trial_used = TRUE
+      WHERE id = ${userId} AND trial_used = FALSE
+      RETURNING id
+    `;
+    if (!updated) {
+      return Response.json({ error: "Il tuo trial gratuito è stato utilizzato. Scegli un piano per continuare." }, { status: 403 });
+    }
     isTrial = true;
     maxDurationSeconds = 300; // 5 min cap for trial
   }

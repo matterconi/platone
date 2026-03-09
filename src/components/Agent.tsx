@@ -94,7 +94,10 @@ const Agent = ({
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const handleBeforeUnload = () => vapiRef.current?.stop();
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       vapiRef.current?.stop();
     };
   }, []);
