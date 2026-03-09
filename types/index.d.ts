@@ -13,6 +13,16 @@ interface Feedback {
   createdAt: string;
 }
 
+interface Evaluation {
+  domainKnowledge: number;
+  problemSolving: number;
+  communication: number;
+  estimatedSeniority: string;
+  strengths: string[];
+  weaknesses: string[];
+  improvementPlan: string[];
+}
+
 interface Interview {
   id: string;
   role: string;
@@ -24,6 +34,7 @@ interface Interview {
   type: string;
   specialization?: string;
   finalized: boolean;
+  evaluation?: Evaluation;
 }
 
 interface InterviewFormValues {

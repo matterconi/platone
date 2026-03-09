@@ -5,6 +5,7 @@ import sql from "@/lib/db";
 import InterviewDetail from "./InterviewDetail";
 
 function mapInterview(row: Record<string, unknown>): Interview {
+  const data = row.data as Record<string, unknown> | null;
   return {
     id: row.id as string,
     userId: row.user_id as string,
@@ -16,6 +17,7 @@ function mapInterview(row: Record<string, unknown>): Interview {
     specialization: row.specialization as string | undefined,
     finalized: row.finalized as boolean,
     createdAt: row.created_at as string,
+    evaluation: data?.evaluation as Evaluation | undefined,
   };
 }
 

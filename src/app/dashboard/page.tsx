@@ -5,6 +5,7 @@ import { Paddle } from "@paddle/paddle-node-sdk";
 import { getUserAccess } from "@/lib/subscription";
 import { Button } from "@/components/ui/button";
 import SubscriptionManager from "@/components/SubscriptionManager";
+import Interviews from "@/components/Interviews";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!);
 
@@ -33,38 +34,47 @@ export default async function DashboardPage() {
           status: tx.status ?? "",
         });
       }
-    } catch {
-      // Non-blocking: storico non disponibile
+    } catch (err) {
+      console.error("[dashboard] Failed to fetch Paddle transactions:", err);
     }
   }
 
   return (
-    <main className="flex flex-col gap-10 px-6 py-12 max-w-5xl mx-auto">
-      <h1 className="text-indigo-100 text-3xl font-bold">Il tuo piano</h1>
+    <main className="flex flex-col gap-16 px-6 py-12 max-w-5xl mx-auto">
+      {/* Interview list */}
+      <section className="flex flex-col gap-6">
+        <h1 className="text-indigo-100 text-3xl font-bold">Le tue interview</h1>
+        <Interviews />
+      </section>
 
-      {access.hasActiveSubscription && access.plan ? (
-        <SubscriptionManager
-          plan={access.plan}
-          credits={access.credits ?? 0}
-          nextPlan={access.nextPlan}
-          paddleSubscriptionId={access.paddleSubscriptionId}
-          userEmail={userEmail}
-          userId={userId}
-          transactions={transactions}
-        />
-      ) : (
-        <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full max-w-lg">
-          <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-4 p-8">
-            <p className="text-indigo-100 font-semibold text-lg">Nessun piano attivo</p>
-            <p className="text-indigo-400 text-sm">
-              Scegli un piano per accedere alle interview con il tuo AI voice coach.
-            </p>
-            <Button asChild className="bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10">
-              <Link href="/#pricing">Scegli un piano</Link>
-            </Button>
+      {/* Plan */}
+      <section className="flex flex-col gap-6">
+        <h2 className="text-indigo-100 text-2xl font-bold">Il tuo piano</h2>
+
+        {access.hasActiveSubscription && access.plan ? (
+          <SubscriptionManager
+            plan={access.plan}
+            credits={access.credits ?? 0}
+            nextPlan={access.nextPlan}
+            paddleSubscriptionId={access.paddleSubscriptionId}
+            userEmail={userEmail}
+            userId={userId}
+            transactions={transactions}
+          />
+        ) : (
+          <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full max-w-lg">
+            <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl min-h-full flex flex-col gap-4 p-8">
+              <p className="text-indigo-100 font-semibold text-lg">Nessun piano attivo</p>
+              <p className="text-indigo-400 text-sm">
+                Scegli un piano per accedere alle interview con il tuo AI voice coach.
+              </p>
+              <Button asChild className="bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-5 cursor-pointer min-h-10">
+                <Link href="/#pricing">Scegli un piano</Link>
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </section>
     </main>
   );
 }
