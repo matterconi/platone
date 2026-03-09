@@ -52,8 +52,10 @@ export default function SubscriptionManager({
   const [refundResult, setRefundResult] = useState<{ previousPlan: string | null } | null>(null);
 
   const planCredits = PLAN_CREDITS[plan] ?? 0;
+  const extraCredits = Math.max(0, credits - planCredits);
+  const planCreditsRemaining = Math.min(credits, planCredits);
   const remainingMinutes = Math.floor(credits / DEFAULT_CREDITS_PER_MINUTE);
-  const usagePercent = planCredits > 0 ? Math.min(100, Math.round(((planCredits - credits) / planCredits) * 100)) : 0;
+  const usagePercent = planCredits > 0 ? Math.min(100, Math.round(((planCredits - planCreditsRemaining) / planCredits) * 100)) : 0;
   const isLow = usagePercent >= 80;
 
   useEffect(() => {
@@ -135,23 +137,27 @@ export default function SubscriptionManager({
           {/* Credits */}
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-baseline">
-              <span className="text-indigo-400 text-sm">Credits rimanenti</span>
+              <span className="text-indigo-400 text-sm">Credits piano</span>
               <span className="text-indigo-100 font-semibold tabular-nums">
-                {credits}{" "}
+                {planCreditsRemaining}{" "}
                 <span className="text-indigo-400 font-normal text-sm">/ {planCredits}</span>
               </span>
             </div>
             <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${isLow ? "bg-red-400" : "bg-violet-300"}`}
-                style={{ width: `${usagePercent}%` }}
+                style={{ width: `${100 - usagePercent}%` }}
               />
             </div>
             <div className="flex justify-between text-xs text-indigo-400">
               <span className={isLow ? "text-red-400 font-medium" : ""}>
                 ~{remainingMinutes} min rimanenti
               </span>
-              <span>{credits} credits</span>
+              {extraCredits > 0 ? (
+                <span className="text-violet-400 font-medium">+{extraCredits} extra</span>
+              ) : (
+                <span>{planCreditsRemaining} credits</span>
+              )}
             </div>
           </div>
 

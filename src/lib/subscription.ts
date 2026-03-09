@@ -18,6 +18,7 @@ export async function getUserAccess(userId: string) {
       AND s.status = 'active'
       AND (s.ends_at IS NULL OR s.ends_at > NOW())
     WHERE u.id = ${userId}
+    ORDER BY s.last_paid_at DESC NULLS LAST
     LIMIT 1
   `;
 
@@ -33,6 +34,17 @@ export async function getUserAccess(userId: string) {
     nextPlan: row.next_plan ?? null,
     paddleCustomerId: row.paddle_customer_id ?? null,
   };
+}
+
+export async function getActiveSubscriptionId(userId: string): Promise<string | null> {
+  const [row] = await sql`
+    SELECT paddle_subscription_id
+    FROM subscriptions
+    WHERE user_id = ${userId} AND status = 'active'
+    ORDER BY last_paid_at DESC NULLS LAST
+    LIMIT 1
+  `;
+  return row?.paddle_subscription_id ?? null;
 }
 
 /**
