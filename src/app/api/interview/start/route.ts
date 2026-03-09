@@ -200,13 +200,13 @@ Conduct the session:
     assistantOverrides: { maxDurationSeconds, variableValues },
   };
 
-  const vapiRes = await fetch("https://api.vapi.ai/call/web", {
+  const vapiRes = await fetch("https://api.vapi.ai/call", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN}`,
+      Authorization: `Bearer ${process.env.VAPI_PRIVATE_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(vapiBody),
+    body: JSON.stringify({ type: "webCall", ...vapiBody }),
   });
 
   if (!vapiRes.ok) {
