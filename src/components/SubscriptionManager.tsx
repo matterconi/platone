@@ -129,8 +129,7 @@ export default function SubscriptionManager({
     try {
       const res = await fetch("/api/subscription/restore", { method: "POST" });
       if (res.ok) {
-        setCancelDone(false);
-        setDowngradedPlan(null);
+        window.location.reload();
       } else {
         const data = await res.json();
         alert(data.error ?? "Errore nel ripristino. Riprova.");
@@ -170,7 +169,7 @@ export default function SubscriptionManager({
               <span className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_COLORS[plan] ?? "bg-slate-900 text-indigo-400"}`}>
                 Attivo
               </span>
-              {(cancelDone || nextPlan === "cancelled") && (
+              {cancelDone && !refundResult && (
                 <span className="text-xs text-red-400 font-medium">Cancellazione schedulata</span>
               )}
               {downgradedPlan && downgradedPlan !== "cancelled" && (
