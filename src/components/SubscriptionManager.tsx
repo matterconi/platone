@@ -50,6 +50,10 @@ export default function SubscriptionManager({
   const [cancelDone, setCancelDone] = useState(nextPlan === "cancelled");
   const [refunding, setRefunding] = useState(false);
   const [refundResult, setRefundResult] = useState<{ previousPlan: string | null } | null>(null);
+  const [downgrading, setDowngrading] = useState<string | null>(null); // priceId in corso
+  const [downgradedPlan, setDowngradedPlan] = useState<string | null>(
+    nextPlan && nextPlan !== "cancelled" ? nextPlan : null
+  );
 
   const planCredits = PLAN_CREDITS[plan] ?? 0;
   const extraCredits = Math.max(0, credits - planCredits);
@@ -93,6 +97,23 @@ export default function SubscriptionManager({
     }
   };
 
+  const handleDowngrade = async (priceId: string, planName: string) => {
+    if (!confirm(`Passare al piano ${planName}? Il cambio sarà attivo al prossimo rinnovo.`)) return;
+    setDowngrading(priceId);
+    try {
+      const res = await fetch("/api/subscription/downgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await res.json();
+      if (res.ok) setDowngradedPlan(planName.toLowerCase());
+      else alert(data.error ?? "Errore nel downgrade. Riprova.");
+    } finally {
+      setDowngrading(null);
+    }
+  };
+
   const handleCancel = async () => {
     if (!confirm("Sei sicuro di voler cancellare l'abbonamento? Rimarrà attivo fino alla fine del periodo.")) return;
     setCancelling(true);
@@ -126,9 +147,9 @@ export default function SubscriptionManager({
               {(cancelDone || nextPlan === "cancelled") && (
                 <span className="text-xs text-red-400 font-medium">Cancellazione schedulata</span>
               )}
-              {nextPlan && nextPlan !== "cancelled" && (
+              {downgradedPlan && downgradedPlan !== "cancelled" && (
                 <span className="text-xs text-yellow-400 font-medium">
-                  Passa a {PLAN_LABELS[nextPlan] ?? nextPlan} al rinnovo
+                  Passa a {PLAN_LABELS[downgradedPlan] ?? downgradedPlan} al rinnovo
                 </span>
               )}
             </div>
@@ -199,18 +220,31 @@ export default function SubscriptionManager({
           <div className="flex flex-col gap-2">
             {otherPlans.map((p) => {
               const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
+              const isThisDowngrading = downgrading === p.priceId;
+              const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
               return (
                 <button
                   key={p.priceId}
-                  onClick={() => handleCheckout(p.priceId)}
-                  className="flex items-center justify-between p-4 rounded-xl bg-[#1A1C20] border border-[#4B4D4F33] hover:border-[#4B4D4F] transition-colors text-left"
+                  onClick={() =>
+                    isUpgrade
+                      ? handleCheckout(p.priceId)
+                      : handleDowngrade(p.priceId, p.name)
+                  }
+                  disabled={isThisDowngrading || isScheduled}
+                  className="flex items-center justify-between p-4 rounded-xl bg-[#1A1C20] border border-[#4B4D4F33] hover:border-[#4B4D4F] transition-colors text-left disabled:opacity-60 disabled:cursor-default"
                 >
                   <div className="flex flex-col gap-0.5">
                     <span className="text-indigo-100 font-semibold">{p.name}</span>
                     <span className="text-indigo-400 text-xs">{p.credits} crediti/mese · {p.price}</span>
                   </div>
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${isUpgrade ? "bg-violet-300/20 text-violet-300" : "bg-slate-800 text-indigo-400"}`}>
-                    {isUpgrade ? "Upgrade" : "Downgrade"}
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                    isScheduled
+                      ? "bg-yellow-400/20 text-yellow-400"
+                      : isUpgrade
+                      ? "bg-violet-300/20 text-violet-300"
+                      : "bg-slate-800 text-indigo-400"
+                  }`}>
+                    {isThisDowngrading ? "…" : isScheduled ? "Schedulato" : isUpgrade ? "Upgrade" : "Downgrade"}
                   </span>
                 </button>
               );
