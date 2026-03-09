@@ -64,7 +64,7 @@ export async function POST() {
   const txCollection = paddle.transactions.list({
     subscriptionId: [subscriptionId],
     status: ["completed"],
-    orderBy: "createdAt[DESC]",
+    orderBy: "created_at[DESC]",
     perPage: 1,
   });
   const [transaction] = await txCollection.next();
