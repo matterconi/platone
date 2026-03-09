@@ -28,6 +28,15 @@ interface AgentConfig {
   borderColor: string;
 }
 
+const SESSION_OPTIONS: { label: string; seconds: number | null }[] = [
+  { label: "5 min", seconds: 300 },
+  { label: "10 min", seconds: 600 },
+  { label: "15 min", seconds: 900 },
+  { label: "20 min", seconds: 1200 },
+  { label: "30 min", seconds: 1800 },
+  { label: "Illimitata", seconds: null },
+];
+
 // TODO: replace assistantId values with real VAPI assistant IDs per agent
 const AGENTS: AgentConfig[] = [
   {
@@ -93,18 +102,32 @@ const Agent = ({
   const [selectedAgent, setSelectedAgent] = useState<AgentConfig>(AGENTS[0]);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
+  const [sessionMaxSeconds, setSessionMaxSeconds] = useState<number | null>(900); // default 15 min
+  const [maxDurationSeconds, setMaxDurationSeconds] = useState<number | null>(null);
+  const [remainingDisplay, setRemainingDisplay] = useState<number | null>(null);
+  const [creditExpired, setCreditExpired] = useState(false);
+  const remainingRef = useRef<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     const handleBeforeUnload = () => vapiRef.current?.stop();
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       vapiRef.current?.stop();
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const formatSeconds = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
 
   const handleStart = async () => {
     setCallStatus("connecting");
@@ -143,6 +166,7 @@ const Agent = ({
         assistantId: selectedAgent.assistantId,
         userName,
         extraVariables,
+        sessionMaxSeconds,
       }),
     });
 
@@ -156,6 +180,11 @@ const Agent = ({
     }
 
     setIsGenerating(false);
+    setCreditExpired(false);
+    const maxSec: number | null = data.maxDurationSeconds ?? null;
+    setMaxDurationSeconds(maxSec);
+    setRemainingDisplay(maxSec);
+    remainingRef.current = maxSec;
 
     // Create Vapi instance with short-lived JWT from server (no public key in bundle)
     if (vapiRef.current) {
@@ -168,11 +197,24 @@ const Agent = ({
       console.error("VAPI error:", error);
       setCallStatus("inactive");
     });
-    vapi.on("call-start", () => setCallStatus("active"));
+    vapi.on("call-start", () => {
+      setCallStatus("active");
+      if (remainingRef.current !== null) {
+        timerRef.current = setInterval(() => {
+          const next = (remainingRef.current ?? 1) - 1;
+          remainingRef.current = next;
+          setRemainingDisplay(next);
+          if (next <= 0) clearInterval(timerRef.current!);
+        }, 1000);
+      }
+    });
     vapi.on("call-end", () => {
       setCallStatus("finished");
       setIsSpeaking(false);
-      if (redirectOnFinish) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      const expired = remainingRef.current !== null && remainingRef.current <= 10;
+      if (expired) setCreditExpired(true);
+      if (redirectOnFinish && !expired) {
         setTimeout(() => router.push(redirectOnFinish), 1500);
       }
     });
@@ -318,6 +360,26 @@ const Agent = ({
         </div>
       )}
 
+      {/* Timer tempo residuo */}
+      {isCallActive && remainingDisplay !== null && (
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#0E0F1A] border border-[#1A1B28]">
+          <span className="text-xs text-slate-500 uppercase tracking-widest shrink-0">Tempo residuo</span>
+          <div className="flex-1 h-1 rounded-full bg-[#1A1B28] overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 ${
+                remainingDisplay < 60 ? "bg-red-400" : remainingDisplay < 120 ? "bg-amber-400" : "bg-emerald-400"
+              }`}
+              style={{ width: `${Math.min(100, (remainingDisplay / (maxDurationSeconds ?? remainingDisplay)) * 100)}%` }}
+            />
+          </div>
+          <span className={`text-sm font-mono font-semibold tabular-nums shrink-0 ${
+            remainingDisplay < 60 ? "text-red-400" : remainingDisplay < 120 ? "text-amber-400" : "text-emerald-400"
+          }`}>
+            {formatSeconds(remainingDisplay)}
+          </span>
+        </div>
+      )}
+
       {/* Cards interviewer + utente */}
       {(isCallActive || isFinished) && (
       <div className="grid grid-cols-2 gap-6">
@@ -399,6 +461,47 @@ const Agent = ({
             ))}
             <div ref={transcriptEndRef} />
           </div>
+        </div>
+      )}
+
+      {/* Durata massima sessione */}
+      {callStatus === "inactive" && !isGenerating && (
+        <div className="flex flex-col gap-3">
+          <p className="text-slate-200 text-xs tracking-widest uppercase font-semibold">
+            Durata massima
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {SESSION_OPTIONS.map((opt) => {
+              const isSelected = sessionMaxSeconds === opt.seconds;
+              return (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setSessionMaxSeconds(opt.seconds)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
+                    isSelected
+                      ? "bg-indigo-500/20 border-indigo-500/60 text-indigo-300"
+                      : "bg-[#0E0F16] border-[#252736] text-slate-400 hover:border-slate-600 hover:text-slate-200"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Banner crediti esauriti */}
+      {isFinished && creditExpired && (
+        <div className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center">
+          <p className="text-amber-400 font-semibold text-sm">Crediti esauriti</p>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            L&apos;intervista è stata interrotta perché hai esaurito i minuti del tuo piano.
+          </p>
+          <Link href="/dashboard" className="text-xs text-amber-400 hover:text-amber-300 transition-colors underline underline-offset-2 mt-1">
+            Ricarica i crediti →
+          </Link>
         </div>
       )}
 

@@ -83,6 +83,8 @@ export async function POST(req: Request) {
   const userName: string = body.userName ?? "";
   // Mode-specific variableValues (optional — VAPI asks for missing data during the call)
   const extraVariables: Record<string, string> = body.extraVariables ?? {};
+  // User-selected session cap: null = unlimited (bounded only by credits)
+  const sessionMaxSeconds: number | null = body.sessionMaxSeconds ?? null;
 
   const access = await getUserAccess(userId);
   let isTrial = false;
@@ -95,7 +97,9 @@ export async function POST(req: Request) {
     if (remainingSeconds < 60) {
       return Response.json({ error: "Hai esaurito i crediti del piano corrente." }, { status: 403 });
     }
-    maxDurationSeconds = remainingSeconds;
+    maxDurationSeconds = sessionMaxSeconds !== null
+      ? Math.min(remainingSeconds, sessionMaxSeconds)
+      : remainingSeconds;
   } else {
     // No active subscription: allow only one free trial
     if (access.trialUsed) {
