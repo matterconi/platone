@@ -26,6 +26,12 @@ type Transaction = {
   status: string;
 };
 
+type RenewalInfo = {
+  nextBilledAt: string | null;
+  scheduledChange: { action: string; effectiveAt: string } | null;
+  price: string | null;
+} | null;
+
 type Props = {
   plan: string;
   credits: number;
@@ -34,6 +40,7 @@ type Props = {
   userEmail: string;
   userId: string;
   transactions: Transaction[];
+  renewalInfo: RenewalInfo;
 };
 
 export default function SubscriptionManager({
@@ -44,6 +51,7 @@ export default function SubscriptionManager({
   userEmail,
   userId,
   transactions,
+  renewalInfo,
 }: Props) {
   const [paddle, setPaddle] = useState<Paddle | undefined>();
   const [cancelling, setCancelling] = useState(false);
@@ -181,6 +189,29 @@ export default function SubscriptionManager({
               )}
             </div>
           </div>
+
+          {/* Rinnovo */}
+          {renewalInfo && !cancelDone && !refundResult && (() => {
+            const sc = renewalInfo.scheduledChange;
+            const fmt = (d: string) =>
+              new Date(d).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+            if (sc?.action === "cancel") {
+              return (
+                <span className="text-xs text-red-400">
+                  Attivo fino al {fmt(sc.effectiveAt)}
+                </span>
+              );
+            }
+            if (renewalInfo.nextBilledAt) {
+              return (
+                <span className="text-xs text-indigo-400">
+                  Rinnovo il {fmt(renewalInfo.nextBilledAt)}
+                  {renewalInfo.price && <> · {renewalInfo.price}/mese</>}
+                </span>
+              );
+            }
+            return null;
+          })()}
 
           {/* Rimborso */}
           {refundResult && (

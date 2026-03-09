@@ -39,6 +39,32 @@ export default async function DashboardPage() {
     }
   }
 
+  // Fetch renewal info from Paddle subscription
+  type RenewalInfo = {
+    nextBilledAt: string | null;
+    scheduledChange: { action: string; effectiveAt: string } | null;
+    price: string | null;
+  };
+  let renewalInfo: RenewalInfo | null = null;
+  if (access.paddleSubscriptionId) {
+    try {
+      const sub = await paddle.subscriptions.get(access.paddleSubscriptionId);
+      const unitPrice = sub.items[0]?.price?.unitPrice;
+      const price = unitPrice
+        ? `${unitPrice.currencyCode} ${(parseInt(unitPrice.amount) / 100).toFixed(2)}`
+        : null;
+      renewalInfo = {
+        nextBilledAt: sub.nextBilledAt ?? null,
+        scheduledChange: sub.scheduledChange
+          ? { action: sub.scheduledChange.action, effectiveAt: sub.scheduledChange.effectiveAt }
+          : null,
+        price,
+      };
+    } catch (err) {
+      console.error("[dashboard] Failed to fetch Paddle subscription:", err);
+    }
+  }
+
   return (
     <main className="flex flex-col gap-16 px-6 py-12 max-w-5xl mx-auto">
       {/* Interview list */}
@@ -60,6 +86,7 @@ export default async function DashboardPage() {
             userEmail={userEmail}
             userId={userId}
             transactions={transactions}
+            renewalInfo={renewalInfo}
           />
         ) : (
           <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33] w-full max-w-lg">
