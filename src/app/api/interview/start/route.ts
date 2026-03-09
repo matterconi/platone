@@ -29,7 +29,7 @@ Generate a system prompt for a minimal demo interview with these strict rules:
 - Keep the question broad enough to apply to any level (e.g. "Tell me about a challenging situation you faced in your role and how you handled it.").
 - After the user answers, give 2-3 sentences of warm, encouraging feedback.
 - Then say: "This was your free demo interview. To unlock full sessions with detailed feedback and multiple questions, check out our plans."
-- Immediately call save_interview with the collected data (role, the one question asked, and a brief evaluation).
+- Immediately call save_interview with the collected data (role, the one question asked, and a brief evaluation with at least 1 strength, 1 weakness, and 1 improvement step — NEVER leave these arrays empty).
 - title: a short label like "Demo · [Role]" (max 40 chars).
 - Output only the system prompt text, nothing else.`;
 
@@ -61,7 +61,7 @@ Rules for systemPrompt (only when valid: true):
 - Vary the questions: sometimes ask classic interview questions, other times ask less common but equally valid ones (e.g. edge cases, trade-offs, real-world scenarios, architecture decisions, debugging situations, opinion-based questions). Explicitly instruct VAPI to randomize which specific topics to cover each session and to avoid always asking the same standard questions.
 - Based on duration, ask exactly this many interview questions (excluding clarification questions at the start): quick = 3, regular = 5, long = 7. State this explicitly in the system prompt (e.g. "Ask exactly 5 interview questions.").
 - At the very end, VAPI must NOT read the evaluation aloud. Instead, simply thank the candidate and inform them that their written feedback will be available shortly.
-- VAPI must then immediately call the function save_interview with: all collected metadata (role, level, domain, specialization, type, objective, questions asked), a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings), weaknesses (array of strings), improvementPlan (array of strings), and an extras object with domain-specific metadata using ONLY these canonical keys:
+- VAPI must then immediately call the function save_interview with: all collected metadata (role, level, domain, specialization, type, objective, questions asked), a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings — MUST contain at least 2 specific strengths observed during the interview, NEVER empty), weaknesses (array of strings — MUST contain at least 2 specific areas for improvement, NEVER empty), improvementPlan (array of strings — MUST contain at least 2 concrete actionable steps, NEVER empty), and an extras object with domain-specific metadata using ONLY these canonical keys:
   - tech/engineering: techstack (string[]), frameworks (string[])
   - medicine/healthcare: clinical_setting (string), procedures (string[])
   - law/legal: practice_area (string), jurisdiction (string)
