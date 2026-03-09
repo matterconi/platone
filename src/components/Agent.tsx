@@ -158,7 +158,7 @@ const Agent = ({
     if (vapiRef.current) {
       vapiRef.current.stop();
     }
-    const vapi = new Vapi(data.vapiToken);
+    const vapi = new Vapi("reconnect-only");
     vapiRef.current = vapi;
 
     vapi.on("error", (error: Error) => {

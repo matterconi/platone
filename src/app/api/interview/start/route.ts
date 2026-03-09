@@ -233,15 +233,8 @@ Conduct the session:
     ON CONFLICT (call_id) DO NOTHING
   `;
 
-  // Generate a second short-lived JWT for the client to initialize the VAPI SDK
-  const clientToken = await new SignJWT({ orgId: process.env.VAPI_ORG_ID! })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("5m")
-    .sign(vapiSecret);
-
   return Response.json({
     webCall: { id: callId, webCallUrl },
-    vapiToken: clientToken,
     duration,
     title,
   });
