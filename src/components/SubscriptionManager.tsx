@@ -62,6 +62,7 @@ export default function SubscriptionManager({
   const [downgradedPlan, setDowngradedPlan] = useState<string | null>(
     nextPlan && nextPlan !== "cancelled" ? nextPlan : null
   );
+  const [restoring, setRestoring] = useState(false);
 
   const planCredits = PLAN_CREDITS[plan] ?? 0;
   const extraCredits = Math.max(0, credits - planCredits);
@@ -119,6 +120,23 @@ export default function SubscriptionManager({
       else alert(data.error ?? "Errore nel downgrade. Riprova.");
     } finally {
       setDowngrading(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!confirm("Ripristinare l'abbonamento? La cancellazione o il downgrade schedulato verrà annullato.")) return;
+    setRestoring(true);
+    try {
+      const res = await fetch("/api/subscription/restore", { method: "POST" });
+      if (res.ok) {
+        setCancelDone(false);
+        setDowngradedPlan(null);
+      } else {
+        const data = await res.json();
+        alert(data.error ?? "Errore nel ripristino. Riprova.");
+      }
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -239,6 +257,17 @@ export default function SubscriptionManager({
               className="text-xs text-indigo-400 hover:text-red-400 transition-colors text-left disabled:opacity-50"
             >
               {cancelling ? "Cancellazione in corso…" : "Cancella abbonamento"}
+            </button>
+          )}
+
+          {/* Ripristino */}
+          {(cancelDone || downgradedPlan) && !refundResult && paddleSubscriptionId && (
+            <button
+              onClick={handleRestore}
+              disabled={restoring}
+              className="text-xs text-indigo-400 hover:text-violet-400 transition-colors text-left disabled:opacity-50"
+            >
+              {restoring ? "Ripristino in corso…" : "Ripristina abbonamento"}
             </button>
           )}
         </div>

@@ -37,6 +37,14 @@ export async function scheduleDowngrade(subscriptionId: string, nextPlan: string
   `;
 }
 
+export async function restoreSubscription(subscriptionId: string) {
+  await sql`
+    UPDATE subscriptions
+    SET next_plan = NULL
+    WHERE paddle_subscription_id = ${subscriptionId}
+  `;
+}
+
 export async function cancelSubscription(subscriptionId: string) {
   await sql`
     UPDATE subscriptions
