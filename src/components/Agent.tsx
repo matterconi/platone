@@ -94,42 +94,10 @@ const Agent = ({
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN!);
-    vapiRef.current = vapi;
-
-    vapi.on("error", (error: Error) => {
-      console.error("VAPI error:", error);
-      setCallStatus("inactive");
-    });
-    vapi.on("call-start", () => setCallStatus("active"));
-    vapi.on("call-end", () => {
-      setCallStatus("finished");
-      setIsSpeaking(false);
-      if (redirectOnFinish) {
-        setTimeout(() => router.push(redirectOnFinish), 1500);
-      }
-    });
-    vapi.on("speech-start", () => setIsSpeaking(true));
-    vapi.on("speech-end", () => setIsSpeaking(false));
-    vapi.on("message", (message: TranscriptMessage) => {
-      if (
-        message.type === "transcript" &&
-        message.transcriptType === "final"
-      ) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: message.role === "assistant" ? "assistant" : "user",
-            content: message.transcript,
-          },
-        ]);
-      }
-    });
-
     return () => {
-      vapi.stop();
+      vapiRef.current?.stop();
     };
-  }, [redirectOnFinish, router]);
+  }, []);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -185,8 +153,41 @@ const Agent = ({
     }
 
     setIsGenerating(false);
-    // Server created the VAPI call with maxDurationSeconds enforced — just reconnect
-    await vapiRef.current?.reconnect(data.webCall);
+
+    // Create Vapi instance with short-lived JWT from server (no public key in bundle)
+    if (vapiRef.current) {
+      vapiRef.current.stop();
+    }
+    const vapi = new Vapi(data.vapiToken);
+    vapiRef.current = vapi;
+
+    vapi.on("error", (error: Error) => {
+      console.error("VAPI error:", error);
+      setCallStatus("inactive");
+    });
+    vapi.on("call-start", () => setCallStatus("active"));
+    vapi.on("call-end", () => {
+      setCallStatus("finished");
+      setIsSpeaking(false);
+      if (redirectOnFinish) {
+        setTimeout(() => router.push(redirectOnFinish), 1500);
+      }
+    });
+    vapi.on("speech-start", () => setIsSpeaking(true));
+    vapi.on("speech-end", () => setIsSpeaking(false));
+    vapi.on("message", (message: TranscriptMessage) => {
+      if (message.type === "transcript" && message.transcriptType === "final") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: message.role === "assistant" ? "assistant" : "user",
+            content: message.transcript,
+          },
+        ]);
+      }
+    });
+
+    await vapi.reconnect(data.webCall);
   };
 
   const handleStop = () => {

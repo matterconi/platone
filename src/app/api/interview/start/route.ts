@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
+import { SignJWT } from "jose";
 import { z } from "zod";
 import sql from "@/lib/db";
 import { getUserAccess } from "@/lib/subscription";
@@ -193,6 +194,13 @@ Conduct the session:
   };
   if (systemPrompt) variableValues.systemPrompt = systemPrompt;
 
+  // Generate short-lived JWT for VAPI (replaces public key — never sent to client)
+  const vapiSecret = new TextEncoder().encode(process.env.VAPI_PRIVATE_KEY!);
+  const vapiToken = await new SignJWT({ orgId: process.env.VAPI_ORG_ID! })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("5m")
+    .sign(vapiSecret);
+
   // Create web call via VAPI REST API — maxDurationSeconds enforced server-side
   const resolvedAssistantId = assistantId ?? process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
   const vapiBody = {
@@ -200,13 +208,13 @@ Conduct the session:
     assistantOverrides: { maxDurationSeconds, variableValues },
   };
 
-  const vapiRes = await fetch("https://api.vapi.ai/call", {
+  const vapiRes = await fetch("https://api.vapi.ai/call/web", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.VAPI_PRIVATE_KEY}`,
+      Authorization: `Bearer ${vapiToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ type: "webCall", ...vapiBody }),
+    body: JSON.stringify(vapiBody),
   });
 
   if (!vapiRes.ok) {
@@ -225,8 +233,15 @@ Conduct the session:
     ON CONFLICT (call_id) DO NOTHING
   `;
 
+  // Generate a second short-lived JWT for the client to initialize the VAPI SDK
+  const clientToken = await new SignJWT({ orgId: process.env.VAPI_ORG_ID! })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("5m")
+    .sign(vapiSecret);
+
   return Response.json({
     webCall: { id: callId, webCallUrl },
+    vapiToken: clientToken,
     duration,
     title,
   });
