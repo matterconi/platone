@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { PLAN_CREDITS, DEFAULT_CREDITS_PER_MINUTE } from "@/lib/credits";
 
 const PLANS = [
-  { name: "Casual", priceId: "pri_01kk1pndq89nmbytffssa8sejw", credits: 100, price: "$9.90" },
-  { name: "Regular", priceId: "pri_01kk1pqm2pz7sq1z47ed04gqc2", credits: 200, price: "$14.90" },
-  { name: "Pro", priceId: "pri_01kk1ptvd4ky1wtrn44awc72cv", credits: 350, price: "$24.99" },
+  { name: "Casual", priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_CASUAL!, credits: 100, price: "$9.90" },
+  { name: "Regular", priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_REGULAR!, credits: 200, price: "$14.90" },
+  { name: "Pro", priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO!, credits: 350, price: "$24.99" },
 ];
 
 const PLAN_LABELS: Record<string, string> = { casual: "Casual", regular: "Regular", pro: "Pro" };
@@ -48,6 +48,8 @@ export default function SubscriptionManager({
   const [paddle, setPaddle] = useState<Paddle | undefined>();
   const [cancelling, setCancelling] = useState(false);
   const [cancelDone, setCancelDone] = useState(nextPlan === "cancelled");
+  const [refunding, setRefunding] = useState(false);
+  const [refundResult, setRefundResult] = useState<{ previousPlan: string | null } | null>(null);
 
   const planCredits = PLAN_CREDITS[plan] ?? 0;
   const remainingMinutes = Math.floor(credits / DEFAULT_CREDITS_PER_MINUTE);
@@ -67,6 +69,26 @@ export default function SubscriptionManager({
       customer: { email: userEmail },
       customData: { clerkUserId: userId },
     });
+  };
+
+  const handleRefund = async () => {
+    const msg = credits >= planCredits
+      ? "Richiedere il rimborso completo e cancellare l'abbonamento?"
+      : "Richiedere il rimborso? L'abbonamento verrà ridotto al piano precedente.";
+    if (!confirm(msg)) return;
+    setRefunding(true);
+    try {
+      const res = await fetch("/api/subscription/refund", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setRefundResult(data);
+        setCancelDone(true);
+      } else {
+        alert(data.error ?? "Errore nel rimborso. Riprova.");
+      }
+    } finally {
+      setRefunding(false);
+    }
   };
 
   const handleCancel = async () => {
@@ -133,8 +155,26 @@ export default function SubscriptionManager({
             </div>
           </div>
 
+          {/* Rimborso */}
+          {refundResult && (
+            <span className="text-xs text-green-400 font-medium">
+              {refundResult.previousPlan
+                ? `Rimborso elaborato · piano ridotto a ${PLAN_LABELS[refundResult.previousPlan] ?? refundResult.previousPlan}`
+                : "Rimborso elaborato · abbonamento cancellato"}
+            </span>
+          )}
+          {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && credits >= planCredits && (
+            <button
+              onClick={handleRefund}
+              disabled={refunding}
+              className="text-xs text-indigo-400 hover:text-green-400 transition-colors text-left disabled:opacity-50"
+            >
+              {refunding ? "Rimborso in corso…" : "Richiedi rimborso"}
+            </button>
+          )}
+
           {/* Cancellazione */}
-          {!cancelDone && nextPlan !== "cancelled" && paddleSubscriptionId && (
+          {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && (
             <button
               onClick={handleCancel}
               disabled={cancelling}
