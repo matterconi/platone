@@ -106,3 +106,10 @@ ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS last_paid_at TIMESTAMPTZ;
 
 -- Scheduled plan change (e.g. downgrade or cancellation at next renewal)
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS next_plan TEXT CHECK (next_plan IN ('casual', 'regular', 'pro', 'cancelled'));
+
+-- Interview categorization: domain + tags (replaces free-form specialization/techstack for filtering)
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS domain TEXT;
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+
+-- Store the generated system prompt so the server can use it for post-call extraction
+ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS system_prompt TEXT;

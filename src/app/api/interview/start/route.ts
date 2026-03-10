@@ -29,25 +29,25 @@ Generate a system prompt for a minimal demo interview with these strict rules:
 - Keep the question broad enough to apply to any level (e.g. "Tell me about a challenging situation you faced in your role and how you handled it.").
 - After the user answers, give 2-3 sentences of warm, encouraging feedback.
 - Then say: "This was your free demo interview. To unlock full sessions with detailed feedback and multiple questions, check out our plans."
-- Immediately call save_interview with the collected data (role, the one question asked, and a brief evaluation with at least 1 strength, 1 weakness, and 1 improvement step — NEVER leave these arrays empty).
+- Immediately call save_interview with: transcript (the full verbatim transcript of the entire conversation), questions (array with the one question asked), and a brief evaluation with at least 1 strength, 1 weakness, and 1 improvement step — NEVER leave these arrays empty.
 - title: a short label like "Demo · [Role]" (max 40 chars).
 - Output only the system prompt text, nothing else.`;
 
 const META_PROMPT = `You are an expert at writing system prompts for AI voice interviewers.
-You cover any professional domain: software engineering, finance, medicine, law, marketing, design, economics, and more.
+You cover any professional domain: software engineering, finance, medicine, law, marketing, design, economics, humanities, education, and more.
 
 From the user's message, extract what is provided among:
-- role (e.g. developer, financial analyst, cardiologist)
-- level (e.g. junior, mid, senior)
-- domain (the broad professional field, e.g. web development, finance, medicine, law)
-- specialization (the specific focus within the domain, e.g. frontend, animations, M&A, cardiology — always infer this even if not explicitly stated: e.g. "React developer" → "frontend / React", "cardiologist" → "cardiology", "M&A lawyer" → "M&A")
-- interview type (e.g. technical, behavioral, mixed, case study)
-- objective (e.g. job interview prep, academic, certification)
-- duration (how long / how many questions: "quick" = 3 questions, "regular" = 5 questions, "long" = 7 questions — infer from context or default to "regular")
-- title (a concise label for the interview, max 60 chars, combining the most distinctive elements: level + role + key specialization or focus. Examples: "Senior Frontend Developer · React/Next.js", "Cardiologist · Clinical Behavioral", "M&A Lawyer · Senior · Case Study". Omit redundant info, no level if already in role.)
+- role: the job title or academic role ONLY, without seniority prefix. E.g. "senior React developer" → "React developer", "junior marketing manager" → "marketing manager", "PhD student in economics" → "economics PhD student".
+- level: seniority or academic level only (e.g. junior, mid, senior, lead, student, graduate, phd, professor). Separate from role.
+- domain: the broad professional or academic field (e.g. web development, finance, medicine, law, marketing, humanities, education).
+- specialization: 1-3 words max describing the specific focus within the domain. Must NOT repeat or echo the role. E.g. role="frontend developer" → spec="animations" (not "frontend"). role="cardiologist" → spec="interventional" (not "cardiology"). Leave empty if nothing specific is known.
+- interview type (e.g. technical, behavioral, mixed, case-study, architectural, academic-discussion)
+- objective (e.g. job interview prep, academic exam, certification)
+- duration ("quick" = 3 questions, "regular" = 5 questions, "long" = 7 questions — infer from context or default to "regular")
+- title: a concise label, max 60 chars. Format: level + role + specialization or focus. Examples: "Senior Frontend Developer · Animations", "Cardiologist · Interventional · Behavioral", "Economics PhD · Game Theory". Omit level if already implied by role.
 
 Then:
-- If the message describes an interview or job role (any field) → set valid: true and write a systemPrompt.
+- If the message describes an interview or job/academic role (any field) → set valid: true and write a systemPrompt.
 - If the message is empty or incomplete → set valid: true and write a systemPrompt that instructs VAPI to collect all missing context fields at the start of the call.
 - If the message is off-topic or nonsensical (clearly not about an interview) → set valid: false and explain why in reason.
 
@@ -61,14 +61,10 @@ Rules for systemPrompt (only when valid: true):
 - Vary the questions: sometimes ask classic interview questions, other times ask less common but equally valid ones (e.g. edge cases, trade-offs, real-world scenarios, architecture decisions, debugging situations, opinion-based questions). Explicitly instruct VAPI to randomize which specific topics to cover each session and to avoid always asking the same standard questions.
 - Based on duration, ask exactly this many interview questions (excluding clarification questions at the start): quick = 3, regular = 5, long = 7. State this explicitly in the system prompt (e.g. "Ask exactly 5 interview questions.").
 - At the very end, VAPI must NOT read the evaluation aloud. Instead, simply thank the candidate and inform them that their written feedback will be available shortly.
-- VAPI must then immediately call the function save_interview with: all collected metadata (role, level, domain, specialization, type, objective, questions asked), a structured evaluation object containing: domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array of strings — MUST contain at least 2 specific strengths observed during the interview, NEVER empty), weaknesses (array of strings — MUST contain at least 2 specific areas for improvement, NEVER empty), improvementPlan (array of strings — MUST contain at least 2 concrete actionable steps, NEVER empty), and an extras object with domain-specific metadata using ONLY these canonical keys:
-  - tech/engineering: techstack (string[]), frameworks (string[])
-  - medicine/healthcare: clinical_setting (string), procedures (string[])
-  - law/legal: practice_area (string), jurisdiction (string)
-  - finance/economics: asset_class (string), instruments (string[])
-  - marketing/design: channels (string[]), tools (string[])
-  - other domains: use the most relevant 1-2 keys in snake_case, string or string[] values only
-  Rules for extras: max 3 keys, only the most distinctive information for the domain. Extras are complementary to the core fields — do not duplicate role, level, domain, or specialization. If the user provided many details, distill only what is most relevant and not already captured elsewhere. Keep values concise (short strings or short arrays). Omit extras entirely if nothing domain-specific was discussed.
+- VAPI must then immediately call the function save_interview with:
+  - transcript: the full verbatim transcript of the entire conversation
+  - questions: array of the interview questions asked (verbatim, NOT the candidate's answers)
+  - evaluation: object with domainKnowledge (1-10), problemSolving (1-10), communication (1-10), estimatedSeniority, strengths (array — MUST contain at least 2 specific strengths observed, NEVER empty), weaknesses (array — MUST contain at least 2 specific areas for improvement, NEVER empty), improvementPlan (array — MUST contain at least 2 concrete actionable steps, NEVER empty)
 - Be efficient and natural for voice conversation.
 - Output only the system prompt text, nothing else.`;
 
@@ -177,12 +173,9 @@ Conduct the session:
 
     const { object } = await generateObject({
       model: deepseek("deepseek-chat"),
-      output: "object",
       schema: resultSchema,
-      messages: [
-        { role: "system", content: systemContent },
-        { role: "user", content: deepseekUserMessage || "" },
-      ],
+      system: systemContent,
+      prompt: deepseekUserMessage || "",
     });
 
     if (!object.valid) {
@@ -239,8 +232,8 @@ Conduct the session:
 
   // Register session in DB (replaces the separate register-call step)
   await sql`
-    INSERT INTO interview_sessions (call_id, user_id, title)
-    VALUES (${callId}, ${userId}, ${title})
+    INSERT INTO interview_sessions (call_id, user_id, title, system_prompt)
+    VALUES (${callId}, ${userId}, ${title}, ${systemPrompt})
     ON CONFLICT (call_id) DO NOTHING
   `;
 

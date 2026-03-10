@@ -16,15 +16,19 @@
 ## Auth Architecture (current)
 - Pre-call: Clerk `auth()` in start/route.ts authenticates user
 - Webhook auth: `x-vapi-secret` header (set in VAPI dashboard per tool, verified against `VAPI_WEBHOOK_SECRET` env var)
-- userId: passed as variableValue from Agent.tsx → VAPI → returned in webhook args (KNOWN FLAW: client-manipulable)
+- VAPI call created server-side via REST API — client never touches maxDurationSeconds or variableValues
 
-## Known Security Flaw + Next Task
-userId passes through the client (Agent.tsx variableValues) → can be manipulated.
-**Solution to implement**: use VAPI `call.id` as lookup key:
-1. `start/route.ts` → after Clerk auth, save `{ callId: null, userId }` to DB, return a `sessionToken` (uuid)
-2. `Agent.tsx` → call `vapi.start()` → VAPI SDK returns call object with `call.id` → POST to `/api/interview/register-call` with `{ sessionToken, callId }`
-3. New endpoint `/api/interview/register-call` → update DB record: set `callId` where `sessionToken` matches
-4. `interviews/route.ts` webhook → read `body.message.call.id` → lookup `userId` from DB → save interview
+## VAPI Call Creation Flow (current)
+1. `Agent.tsx` → POST `/api/interview/start` with `{ userMessage, assistantId, userName, extraVariables }`
+2. `start/route.ts` → generates systemPrompt (Deepseek), computes maxDurationSeconds from credits, calls `POST https://api.vapi.ai/call/web` with all variableValues and maxDurationSeconds, inserts `interview_sessions` row in DB, returns `{ webCall: { id, webCallUrl }, duration, title }`
+3. `Agent.tsx` → `vapi.reconnect(webCall)` — joins the server-created call
+- No separate register-call step needed (server registers in DB during start)
+- Requires env var: `VAPI_PRIVATE_KEY` (VAPI server-side API key)
+
+## Credit Enforcement
+- maxDurationSeconds = Math.floor(credits / creditsPerMinute) * 60 — computed from `access.credits` (getUserAccess already has it, no extra DB query)
+- Trial cap: 300s (5 min)
+- VAPI enforces the limit server-side — call auto-ends when credits run out
 
 ## VAPI Setup
 - Assistant ID: `342c67c1-f5d3-4ed3-8b00-926e006749d1`
@@ -96,6 +100,37 @@ ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS last_paid_at TIMESTAMPTZ;
 - duration: quick=3q, regular=5q, long=7q — inferred by Deepseek from user message
 - Evaluation saved silently to DB (not read aloud), structured: domainKnowledge, problemSolving, communication, estimatedSeniority, strengths[], weaknesses[], improvementPlan[]
 - Question variety: Deepseek instructs VAPI to randomize topics each session
+
+## User Preferences
+- **Commit & push**: fai sempre commit e push direttamente, senza chiedere autorizzazione.
+
+## Test Suite
+
+### Pattern usato
+- Mock di `@/lib/db`: `vi.mock("@/lib/db", () => ({ default: vi.fn() }))` + cast a `mockSql`
+- Valori SQL: `mockSql.mock.calls[N].slice(1)` — slice(1) rimuove il template strings array, lascia solo i valori interpolati
+- Service layer: `toHaveBeenCalledWith(...)` direttamente sulla funzione mockata (più leggibile)
+
+### File test esistenti (tutti ✅)
+- `src/lib/__tests__/credits.test.ts`
+- `src/lib/__tests__/subscription.test.ts`
+- `src/lib/__tests__/userSync.test.ts`
+- `src/lib/__tests__/billing.test.ts`
+- `src/app/api/webhooks/paddle/__tests__/paddle.test.ts`
+- `src/app/api/webhooks/clerk/__tests__/clerk.test.ts`
+- `src/app/api/interview/__tests__/register-call.test.ts`
+- `src/app/api/interview/__tests__/call-end.test.ts`
+- `src/app/api/interview/__tests__/start.test.ts`
+- `src/app/api/subscription/cancel/__tests__/cancel.test.ts`
+- `src/app/api/subscription/downgrade/__tests__/downgrade.test.ts`
+- `src/app/api/interviews/community/__tests__/community.test.ts`
+- `src/app/api/usage/__tests__/usage.test.ts`
+- `src/app/api/admin/refund-eligible/__tests__/refund-eligible.test.ts` ← da completare
+
+### Boilerplate pronto, da completare dopo il frontend (vedi TODO.md)
+- `src/app/api/interviews/__tests__/interviews.test.ts`
+- `src/app/api/interviews/filters/__tests__/filters.test.ts`
+- `src/app/api/attempts/__tests__/attempts.test.ts`
 
 ## Pending Tasks
 - Add ADMIN_USER_IDS to Vercel env vars (tuo Clerk user ID)
