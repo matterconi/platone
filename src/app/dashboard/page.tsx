@@ -33,7 +33,7 @@ export default async function DashboardPage() {
         transactions.push({
           id: tx.id,
           createdAt: tx.createdAt ?? "",
-          amount: tx.details?.totals?.total ?? "0",
+          amount: (parseInt(tx.details?.totals?.total ?? "0") / 100).toFixed(2),
           currency: tx.currencyCode ?? "",
           status: tx.status ?? "",
         });

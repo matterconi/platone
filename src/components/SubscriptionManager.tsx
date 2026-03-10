@@ -208,7 +208,7 @@ export default function SubscriptionManager({
           </div>
 
           {/* Rinnovo */}
-          {renewalInfo && !cancelDone && !refundResult && (() => {
+          {renewalInfo && !refundResult && (() => {
             const sc = renewalInfo.scheduledChange;
             const fmt = (d: string) =>
               new Date(d).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
