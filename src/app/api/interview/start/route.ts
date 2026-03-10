@@ -209,7 +209,7 @@ Conduct the session:
   const resolvedAssistantId = assistantId ?? process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
   const vapiBody = {
     assistantId: resolvedAssistantId,
-    assistantOverrides: { maxDurationSeconds: 30, variableValues },
+    assistantOverrides: { maxDurationSeconds, variableValues },
   };
 
   const vapiRes = await fetch("https://api.vapi.ai/call/web", {
