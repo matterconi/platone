@@ -92,6 +92,7 @@ const Agent = ({
   const router = useRouter();
   const { getToken } = useAuth();
   const vapiRef = useRef<Vapi | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [callStatus, setCallStatus] = useState<CallStatus>("inactive");
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -114,6 +115,7 @@ const Agent = ({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      abortControllerRef.current?.abort();
       vapiRef.current?.stop();
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -132,6 +134,10 @@ const Agent = ({
   const handleStart = async () => {
     setCallStatus("connecting");
     setIsGenerating(true);
+
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     const token = await getToken();
 
@@ -154,21 +160,32 @@ const Agent = ({
       if (specialization) extraVariables.specialization = specialization;
     }
 
-    const res = await fetch("/api/interview/start", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userMessage: mode === "new" ? userMessage : "",
-        mode,
-        assistantId: selectedAgent.assistantId,
-        userName,
-        extraVariables,
-        sessionMaxSeconds,
-      }),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/interview/start", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userMessage: mode === "new" ? userMessage : "",
+          mode,
+          assistantId: selectedAgent.assistantId,
+          userName,
+          extraVariables,
+          sessionMaxSeconds,
+        }),
+      });
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return;
+      setCallStatus("inactive");
+      setIsGenerating(false);
+      return;
+    }
+
+    if (controller.signal.aborted) return;
 
     const data = await res.json();
 
