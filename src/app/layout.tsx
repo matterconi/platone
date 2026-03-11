@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Syne } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
-import Navbar from "@/components/Navbar";
 import Script from "next/script";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-syne",
 });
 
 export const metadata: Metadata = {
@@ -23,9 +28,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={`${plusJakartaSans.className} antialiased bg-[#0a0a0f] min-h-screen`}>
-          <Navbar />
+      <html lang="en" className="overflow-x-hidden">
+        <body className={`${plusJakartaSans.className} ${syne.variable} antialiased bg-[#07070a] min-h-screen overflow-x-hidden`}>
           {children}
           <Toaster />
           <Script

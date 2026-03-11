@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 
 import Agent from "@/components/Agent";
+import Navbar from "@/components/Navbar";
 import { getUserAccess } from "@/lib/subscription";
 
 const DemoInterviewPage = async () => {
@@ -17,6 +18,8 @@ const DemoInterviewPage = async () => {
     "Candidato";
 
   return (
+    <>
+    <Navbar />
     <div className="flex flex-col gap-8 px-6 py-12 max-w-3xl mx-auto">
       <div className="flex flex-col gap-1">
         <h1 className="text-indigo-100 text-2xl font-bold">Interview di prova</h1>
@@ -31,6 +34,7 @@ const DemoInterviewPage = async () => {
         mode="demo"
       />
     </div>
+    </>
   );
 };
 

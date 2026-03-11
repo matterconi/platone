@@ -88,6 +88,7 @@ const Agent = ({
   type,
   techstack,
   specialization,
+  initialMessage,
 }: AgentProps) => {
   const router = useRouter();
   const { getToken } = useAuth();
@@ -97,7 +98,7 @@ const Agent = ({
   const [callStatus, setCallStatus] = useState<CallStatus>("inactive");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [userMessage, setUserMessage] = useState("");
+  const [userMessage, setUserMessage] = useState(initialMessage ?? "");
   const [inputError, setInputError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<AgentConfig>(AGENTS[0]);
@@ -204,6 +205,10 @@ const Agent = ({
     remainingRef.current = maxSec;
 
     // Create Vapi instance with short-lived JWT from server (no public key in bundle)
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     if (vapiRef.current) {
       vapiRef.current.stop();
     }
@@ -217,6 +222,7 @@ const Agent = ({
     vapi.on("call-start", () => {
       setCallStatus("active");
       if (remainingRef.current !== null) {
+        if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = setInterval(() => {
           const next = (remainingRef.current ?? 1) - 1;
           remainingRef.current = next;

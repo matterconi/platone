@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 const plans = [
   {
@@ -61,6 +63,163 @@ const plans = [
   },
 ];
 
+type Plan = (typeof plans)[number];
+
+function PlanCard({
+  plan,
+  onCheckout,
+}: {
+  plan: Plan;
+  onCheckout: (priceId: string) => void;
+}) {
+  return (
+    <div
+      className="rounded-[14px] w-full h-full relative flex flex-col transition-transform duration-200 hover:-translate-y-0.5"
+      style={
+        plan.popular
+          ? {
+              border: "1px solid rgba(184,255,0,0.18)",
+              boxShadow:
+                "0 0 32px -4px rgba(184,255,0,0.12), 0 2px 16px rgba(0,0,0,0.5)",
+            }
+          : {
+              border: "1px solid rgba(240,237,230,0.11)",
+              boxShadow: "0 2px 16px rgba(0,0,0,0.5)",
+            }
+      }
+    >
+      {/* Popular badge */}
+      {plan.popular && (
+        <div className="absolute -top-3.5 left-0 right-0 flex justify-center">
+          <span
+            className="text-[11px] font-bold tracking-widest uppercase px-3.5 py-1 rounded-full"
+            style={{
+              background: "#b8ff00",
+              color: "#07070a",
+              letterSpacing: "0.08em",
+            }}
+          >
+            Più popolare
+          </span>
+        </div>
+      )}
+
+      <div
+        className="rounded-[14px] h-full flex flex-col gap-6 p-5 lg:p-6"
+        style={{ background: "#141418" }}
+      >
+        {/* Name + Price */}
+        <div className="flex flex-col gap-1 pt-2">
+          <span
+            className="text-[11px] font-semibold uppercase"
+            style={{
+              letterSpacing: "0.1em",
+              color: plan.popular ? "#b8ff00" : "rgba(240,237,230,0.35)",
+            }}
+          >
+            {plan.name}
+          </span>
+          <div className="flex items-end gap-1 mt-1">
+            <span
+              className="text-[2.4rem] font-bold leading-none tabular-nums"
+              style={{ color: "#f0ede6", letterSpacing: "-0.03em" }}
+            >
+              ${plan.price}
+            </span>
+            <span
+              className="mb-1 text-sm font-normal"
+              style={{ color: "rgba(240,237,230,0.35)" }}
+            >
+              /mese
+            </span>
+          </div>
+          <p
+            className="text-sm mt-1"
+            style={{ color: "rgba(240,237,230,0.45)" }}
+          >
+            {plan.description}
+          </p>
+        </div>
+
+        {/* Divider */}
+        <div
+          className="h-px"
+          style={{
+            background: plan.popular
+              ? "rgba(184,255,0,0.12)"
+              : "rgba(240,237,230,0.07)",
+          }}
+        />
+
+        {/* Features */}
+        <ul className="flex flex-col gap-2.5 flex-1">
+          {plan.features.map((f) => (
+            <li
+              key={f}
+              className="flex items-start gap-2.5 text-sm"
+              style={{ color: "rgba(240,237,230,0.75)" }}
+            >
+              <span
+                className="mt-0.5 shrink-0 size-4 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={
+                  plan.popular
+                    ? {
+                        background: "rgba(184,255,0,0.12)",
+                        color: "#b8ff00",
+                      }
+                    : {
+                        background: "rgba(240,237,230,0.06)",
+                        color: "rgba(240,237,230,0.4)",
+                      }
+                }
+              >
+                ✓
+              </span>
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        {/* CTA */}
+        <button
+          onClick={() => onCheckout(plan.priceId)}
+          className="w-full min-h-10 px-5 font-bold text-sm cursor-pointer transition-all duration-150 rounded-sm"
+          style={
+            plan.popular
+              ? {
+                  background: "#b8ff00",
+                  color: "#07070a",
+                }
+              : {
+                  background: "rgba(240,237,230,0.05)",
+                  color: "rgba(240,237,230,0.75)",
+                  border: "1px solid rgba(240,237,230,0.1)",
+                }
+          }
+          onMouseEnter={(e) => {
+            if (plan.popular) {
+              (e.currentTarget as HTMLButtonElement).style.background = "#ccff22";
+            } else {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgba(240,237,230,0.09)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (plan.popular) {
+              (e.currentTarget as HTMLButtonElement).style.background = "#b8ff00";
+            } else {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgba(240,237,230,0.05)";
+            }
+          }}
+        >
+          {plan.cta}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const PricingSection = () => {
   const { user } = useUser();
   const router = useRouter();
@@ -100,101 +259,53 @@ const PricingSection = () => {
   return (
     <section className="flex flex-col gap-12">
       {/* Header */}
-      <div className="flex flex-col gap-3 text-center">
-        <h2 className="text-white text-2xl">Scegli il tuo piano</h2>
-        <p className="text-indigo-300/60 max-w-sm mx-auto text-sm leading-relaxed">
+      <div className="flex flex-col gap-3 text-left">
+        <h2 className="font-display text-4xl md:text-5xl font-extrabold text-fg tracking-tight leading-[1.1]">
+          Scegli il tuo<br />
+          <span className="text-accent">piano.</span>
+        </h2>
+        <p
+          className="max-w-sm text-sm leading-relaxed"
+          style={{ color: "rgba(240,237,230,0.45)" }}
+        >
           Ogni piano include l&apos;AI voice coach, feedback in tempo reale e lo storico
           delle sessioni. Disdici quando vuoi.
         </p>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+      {/* Mobile / Tablet — Swiper carousel */}
+      <div
+        className="lg:hidden overflow-x-hidden [--swiper-pagination-color:#b8ff00] [--swiper-pagination-bullet-inactive-color:rgba(240,237,230,0.2)] [--swiper-pagination-bullet-inactive-opacity:1]"
+      >
+        <Swiper
+          modules={[Pagination]}
+          initialSlide={1}
+          slidesPerView={1}
+          spaceBetween={16}
+          pagination={{ clickable: true }}
+          breakpoints={{ 640: { slidesPerView: 2 }, 768: { slidesPerView: 2 } }}
+          className="pb-10!"
+        >
+          {plans.map((plan) => (
+            <SwiperSlide key={plan.name} className="h-auto! pt-4">
+              <PlanCard plan={plan} onCheckout={handleCheckout} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+
+      {/* Desktop — 3-column grid */}
+      <div className="hidden lg:grid lg:grid-cols-3 lg:gap-5 lg:items-stretch">
         {plans.map((plan) => (
-          <div
-            key={plan.name}
-            className={`rounded-2xl w-full relative flex flex-col ${
-              plan.popular
-                ? "ring-1 ring-violet-500/70 shadow-[0_0_40px_-8px_rgba(139,92,246,0.35)]"
-                : "ring-1 ring-white/[0.07]"
-            }`}
-          >
-            {/* Popular badge */}
-            {plan.popular && (
-              <div className="absolute -top-3.5 left-0 right-0 flex justify-center">
-                <span className="bg-violet-500 text-white text-[11px] font-semibold tracking-wide px-3.5 py-1 rounded-full">
-                  Più popolare
-                </span>
-              </div>
-            )}
-
-            <div
-              className={`rounded-2xl h-full flex flex-col gap-6 p-6 ${
-                plan.popular
-                  ? "bg-linear-to-b from-[#1c1733] to-[#0b0c12]"
-                  : "bg-linear-to-b from-[#141519] to-[#0b0c12]"
-              }`}
-            >
-              {/* Name + Price */}
-              <div className="flex flex-col gap-1 pt-2">
-                <span
-                  className={`text-[11px] font-semibold uppercase tracking-widest ${
-                    plan.popular ? "text-violet-400" : "text-indigo-500/80"
-                  }`}
-                >
-                  {plan.name}
-                </span>
-                <div className="flex items-end gap-1 mt-1">
-                  <span className="text-[2.4rem] font-bold text-white leading-none tabular-nums tracking-tight">
-                    ${plan.price}
-                  </span>
-                  <span className="text-indigo-400/60 mb-1 text-sm font-normal">/mese</span>
-                </div>
-                <p className="text-indigo-300/50 text-sm mt-1">{plan.description}</p>
-              </div>
-
-              {/* Divider */}
-              <div className={`h-px ${plan.popular ? "bg-violet-500/20" : "bg-white/6"}`} />
-
-              {/* Features */}
-              <ul className="flex flex-col gap-2.5 flex-1">
-                {plan.features.map((f) => (
-                  <li
-                    key={f}
-                    className="flex items-start gap-2.5 text-sm text-indigo-100/80"
-                  >
-                    <span
-                      className={`mt-0.5 shrink-0 size-4.5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        plan.popular
-                          ? "bg-violet-500/20 text-violet-300"
-                          : "bg-white/6 text-indigo-400/70"
-                      }`}
-                    >
-                      ✓
-                    </span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <Button
-                onClick={() => handleCheckout(plan.priceId)}
-                className={
-                  plan.popular
-                    ? "bg-violet-500! hover:bg-violet-400! text-white! rounded-full! font-semibold! cursor-pointer min-h-10 w-full! justify-center transition-colors!"
-                    : "bg-white/5! text-indigo-100/80! hover:bg-white/9! ring-1! ring-white/10! rounded-full! font-semibold! cursor-pointer min-h-10 w-full! justify-center transition-colors!"
-                }
-              >
-                {plan.cta}
-              </Button>
-            </div>
-          </div>
+          <PlanCard key={plan.name} plan={plan} onCheckout={handleCheckout} />
         ))}
       </div>
 
       {/* Footer note */}
-      <p className="text-center text-indigo-500 text-xs">
+      <p
+        className="text-left text-xs"
+        style={{ color: "rgba(240,237,230,0.3)" }}
+      >
         Pagamento sicuro tramite Paddle · IVA inclusa · Disdici in qualsiasi momento
       </p>
     </section>

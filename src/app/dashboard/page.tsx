@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Paddle, Environment } from "@paddle/paddle-node-sdk";
@@ -72,6 +73,8 @@ export default async function DashboardPage() {
   }
 
   return (
+    <>
+    <Navbar />
     <main className="flex flex-col gap-16 px-6 py-12 max-w-5xl mx-auto">
       {/* Interview list */}
       <section className="flex flex-col gap-6">
@@ -109,5 +112,6 @@ export default async function DashboardPage() {
         )}
       </section>
     </main>
+    </>
   );
 }

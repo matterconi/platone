@@ -1,9 +1,13 @@
+import Navbar from "@/components/Navbar";
+
 export const metadata = {
   title: "Refund Policy – Intervoice",
 };
 
 export default function RefundPage() {
   return (
+    <>
+    <Navbar />
     <main className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-8 text-indigo-200">
       <div className="flex flex-col gap-2">
         <h1 className="text-indigo-100 text-3xl font-bold">Refund Policy</h1>
@@ -68,5 +72,6 @@ export default function RefundPage() {
         </p>
       </section>
     </main>
+    </>
   );
 }

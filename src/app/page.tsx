@@ -1,204 +1,136 @@
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 
-import { Button } from "@/components/ui/button";
-import CommunityInterviews from "@/components/CommunityInterviews";
 import PricingSection from "@/components/PricingSection";
+import FaqAccordion from "@/components/FaqAccordion";
+import AgentsSlider from "@/components/AgentsSlider";
+import EqualizerDivider from "@/components/EqualizerDivider";
+import HeroSection from "@/components/HeroSection";
+import FadeInView from "@/components/FadeInView";
+import StatsSection from "@/components/StatsSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+
+// Grid cell positions (multiples of 36px) — tutti entro il container 1152px (max left 1116px)
+const GRID_CELLS = [
+  { top:  "108px", left:   "72px", delay: "0s"   },
+  { top:   "72px", left:  "504px", delay: "2.4s" },
+  { top:  "216px", left:  "864px", delay: "0.6s" },
+  { top:  "288px", left:  "252px", delay: "3.1s" },
+  { top:  "360px", left:  "648px", delay: "1.8s" },
+  { top:  "432px", left: "1008px", delay: "0.3s" },
+  { top:  "576px", left:  "144px", delay: "2.1s" },
+  { top:  "612px", left:  "720px", delay: "0.7s" },
+  { top:  "720px", left:  "432px", delay: "3.3s" },
+  { top:  "756px", left: "1080px", delay: "1.1s" },
+  { top:  "864px", left:  "288px", delay: "2.6s" },
+  { top:  "900px", left:  "792px", delay: "4.2s" },
+];
 
 export default async function Home() {
   const user = await currentUser();
 
   return (
-    <main className="flex flex-col gap-24 px-6 py-14 max-w-5xl mx-auto">
-      {/* Hero */}
-      <section className="p-px rounded-3xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F22]">
-        <div className="flex flex-row bg-linear-to-b from-[#171532] to-[#08090D] rounded-3xl px-12 py-10 items-center justify-between gap-10 max-sm:flex-col max-sm:px-6 max-sm:py-8">
-          {/* Left */}
-          <div className="flex flex-col gap-5 max-w-md">
-            <span className="self-start bg-violet-400/10 text-violet-300 text-xs font-semibold tracking-wide px-3 py-1 rounded-full border border-violet-400/20 uppercase">
-              AI Voice Coach
-            </span>
-            <h1 className="text-white text-[2.6rem] font-bold leading-[1.15] tracking-tight max-sm:text-3xl">
-              Allenati per il colloquio che conta.
-            </h1>
-            <p className="text-indigo-300/70 text-base leading-relaxed max-w-sm">
-              Parla con un AI voice coach, ricevi feedback in tempo reale e
-              misura i tuoi progressi — sessione dopo sessione.
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <Button
-                asChild
-                className="bg-violet-300! text-zinc-950! hover:bg-violet-300/80! rounded-full! font-bold! px-6 cursor-pointer min-h-10 shrink-0"
-              >
-                <Link href="/interview/new">
-                  {user ? "Nuova interview" : "Inizia gratis"}
-                </Link>
-              </Button>
-              {!user && (
-                <Link
-                  href="/sign-in"
-                  className="text-indigo-400 text-sm hover:text-indigo-100 transition-colors"
-                >
-                  Hai già un account? Accedi →
-                </Link>
-              )}
+    <main className="relative text-fg overflow-x-hidden">
+      {/* Grain overlay */}
+      <div className="grain-overlay" aria-hidden="true" />
+
+      {/* ── Hero ── */}
+      <HeroSection isLoggedIn={!!user} />
+
+      {/* ── Come funziona + Agenti (bg grid, sezione unificata) ── */}
+      <div className="bg-grid">
+        {/* Sparkles */}
+        <div className="grid-sparkles hidden md:block" aria-hidden="true">
+          {GRID_CELLS.map((c, i) => (
+            <div
+              key={i}
+              className="grid-cell"
+              style={{ top: c.top, left: c.left, animationDelay: c.delay }}
+            />
+          ))}
+        </div>
+
+        <section className="relative z-[1] px-6 py-10 md:py-20 max-w-5xl mx-auto">
+          <AgentsSlider />
+        </section>
+      </div>
+
+      {/* ── Stats / grafici ── */}
+      <StatsSection />
+
+      {/* ── Testimonianze ── */}
+      <TestimonialsSection />
+
+      {/* ── Pricing ── */}
+      <div id="pricing" className="px-4 py-10 md:py-20">
+        <FadeInView>
+          <div className="pricing-pill">
+            <div className="max-w-5xl mx-auto">
+              <PricingSection />
             </div>
           </div>
-
-          {/* Illustration */}
-          <div className="shrink-0 max-sm:hidden">
-            <VoiceIllustration />
-          </div>
-        </div>
-      </section>
-
-      {/* Community interviews */}
-      <section className="flex flex-col gap-6">
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex flex-col gap-1.5">
-            <h2 className="text-white text-xl">Interview dalla community</h2>
-            <p className="text-indigo-300/60 text-sm">
-              Le ultime interview create dagli utenti — riutilizzale o creane di nuove.
-            </p>
-          </div>
-          <Link
-            href="/interview/new"
-            className="text-violet-300 text-sm font-medium hover:text-violet-200 transition-colors shrink-0"
-          >
-            Crea la tua →
-          </Link>
-        </div>
-        <CommunityInterviews />
-      </section>
-
-      {/* Pricing */}
-      <div id="pricing">
-        <PricingSection />
+        </FadeInView>
       </div>
+
+      {/* ── FAQ ── */}
+      <section className="px-6 py-10 md:py-20 max-w-5xl mx-auto">
+        <FadeInView className="flex items-end justify-between mb-10 gap-6 flex-wrap">
+          <h2 className="font-display text-4xl md:text-5xl font-extrabold text-fg tracking-tight leading-[1.1] text-center w-full">
+            Domande
+            frequenti.
+          </h2>
+        </FadeInView>
+        <FaqAccordion />
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/5">
+        {/* Ghost wordmark */}
+        <div className="px-6 pt-14 pb-0 max-w-5xl mx-auto">
+          <p className="font-display text-[clamp(4rem,12vw,9rem)] font-extrabold leading-none tracking-tight select-none text-white/[0.2]">
+            Inter<span style={{ color: "rgba(184,255,0,0.22)" }}>voice</span>
+          </p>
+        </div>
+
+        {/* Link columns */}
+        <div className="px-6 pt-10 pb-0 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="flex flex-col gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-white/25">Prodotto</span>
+              <Link href="/interview/new" className="text-sm text-white/45 hover:text-white/80 transition-colors">Nuova interview</Link>
+              <Link href="/dashboard" className="text-sm text-white/45 hover:text-white/80 transition-colors">Dashboard</Link>
+              <Link href="/#pricing" className="text-sm text-white/45 hover:text-white/80 transition-colors">Prezzi</Link>
+              <Link href="/interview/demo" className="text-sm text-white/45 hover:text-white/80 transition-colors">Demo gratuita</Link>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-white/25">Risorse</span>
+              <Link href="/interview/guide" className="text-sm text-white/45 hover:text-white/80 transition-colors">Guida all&apos;interview</Link>
+              <Link href="/#agenti" className="text-sm text-white/45 hover:text-white/80 transition-colors">I nostri agenti</Link>
+              <Link href="/#community" className="text-sm text-white/45 hover:text-white/80 transition-colors">Community</Link>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-white/25">Legale</span>
+              <Link href="/terms" className="text-sm text-white/45 hover:text-white/80 transition-colors">Termini di servizio</Link>
+              <Link href="/refund" className="text-sm text-white/45 hover:text-white/80 transition-colors">Politica rimborsi</Link>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-white/25">Account</span>
+              <Link href="/sign-in" className="text-sm text-white/45 hover:text-white/80 transition-colors">Accedi</Link>
+              <Link href="/sign-up" className="text-sm text-white/45 hover:text-white/80 transition-colors">Registrati</Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Wave divider */}
+        <EqualizerDivider />
+
+        {/* Bottom bar */}
+        <div className="px-6 py-10 max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="font-display text-xs font-bold text-white/20 tracking-tight">Intervoice</span>
+          <span className="text-xs text-white/15">© {new Date().getFullYear()} Intervoice. Tutti i diritti riservati.</span>
+        </div>
+      </footer>
+
     </main>
-  );
-}
-
-function VoiceIllustration() {
-  return (
-    <svg
-      width="180"
-      height="180"
-      viewBox="0 0 180 180"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      {/* Outer glow ring */}
-      <circle cx="90" cy="90" r="80" fill="url(#outerGlow)" opacity="0.15" />
-      <circle cx="90" cy="90" r="60" fill="url(#innerGlow)" opacity="0.12" />
-
-      {/* Mic body */}
-      <rect
-        x="74"
-        y="36"
-        width="32"
-        height="56"
-        rx="16"
-        fill="url(#micGrad)"
-      />
-
-      {/* Mic stand arc */}
-      <path
-        d="M58 90 C58 118 122 118 122 90"
-        stroke="url(#arcGrad)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* Mic stand line */}
-      <line
-        x1="90"
-        y1="118"
-        x2="90"
-        y2="136"
-        stroke="#6366F1"
-        strokeWidth="3"
-        strokeLinecap="round"
-        opacity="0.7"
-      />
-      {/* Base */}
-      <line
-        x1="72"
-        y1="136"
-        x2="108"
-        y2="136"
-        stroke="#6366F1"
-        strokeWidth="3"
-        strokeLinecap="round"
-        opacity="0.7"
-      />
-
-      {/* Sound waves — left */}
-      <path
-        d="M48 72 Q38 90 48 108"
-        stroke="#A5B4FC"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.5"
-      />
-      <path
-        d="M36 60 Q20 90 36 120"
-        stroke="#A5B4FC"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.3"
-      />
-
-      {/* Sound waves — right */}
-      <path
-        d="M132 72 Q142 90 132 108"
-        stroke="#C4B5FD"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.5"
-      />
-      <path
-        d="M144 60 Q160 90 144 120"
-        stroke="#C4B5FD"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.3"
-      />
-
-      {/* Mic highlight */}
-      <rect
-        x="80"
-        y="42"
-        width="8"
-        height="20"
-        rx="4"
-        fill="white"
-        opacity="0.12"
-      />
-
-      <defs>
-        <radialGradient id="outerGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#7C3AED" />
-          <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#A78BFA" />
-          <stop offset="100%" stopColor="#A78BFA" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="micGrad" x1="74" y1="36" x2="106" y2="92" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#818CF8" />
-          <stop offset="100%" stopColor="#6D28D9" />
-        </linearGradient>
-        <linearGradient id="arcGrad" x1="58" y1="104" x2="122" y2="104" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#818CF8" />
-          <stop offset="100%" stopColor="#A78BFA" />
-        </linearGradient>
-      </defs>
-    </svg>
   );
 }

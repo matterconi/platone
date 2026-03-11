@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 const PARAMS = [
   {
@@ -89,6 +90,8 @@ const EXAMPLES = [
 
 export default function InterviewGuidePage() {
   return (
+    <>
+    <Navbar />
     <div className="flex flex-col gap-12 px-6 py-14 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-4">
@@ -181,5 +184,6 @@ export default function InterviewGuidePage() {
         Inizia una nuova intervista →
       </Link>
     </div>
+    </>
   );
 }

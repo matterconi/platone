@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 import sql from "@/lib/db";
 import InterviewDetail from "./InterviewDetail";
+import Navbar from "@/components/Navbar";
 
 function mapInterview(row: Record<string, unknown>): Interview {
   const data = row.data as Record<string, unknown> | null;
@@ -37,13 +38,16 @@ const InterviewPage = async ({ params }: RouteParams) => {
     "Candidato";
 
   return (
-    <div className="flex flex-col gap-8 px-6 py-12 max-w-3xl mx-auto">
-      <InterviewDetail
-        interview={interview}
-        userName={userName}
-        userId={user.id}
-      />
-    </div>
+    <>
+      <Navbar />
+      <div className="flex flex-col gap-8 px-6 py-12 max-w-3xl mx-auto">
+        <InterviewDetail
+          interview={interview}
+          userName={userName}
+          userId={user.id}
+        />
+      </div>
+    </>
   );
 };
 

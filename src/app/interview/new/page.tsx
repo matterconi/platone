@@ -2,11 +2,25 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 
 import Agent from "@/components/Agent";
+import Navbar from "@/components/Navbar";
 import sql from "@/lib/db";
 
-const NewInterviewPage = async () => {
+const NewInterviewPage = async ({ searchParams }: RouteParams) => {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
+
+  const sp = await searchParams;
+  const prefillRole = sp.role ?? "";
+  const prefillType = sp.type ?? "";
+  const prefillCompany = sp.desired_company ?? "";
+  const initialMessage = prefillRole
+    ? [
+        `Voglio un'intervista ${prefillType || "tecnica"} per il ruolo di ${prefillRole}`,
+        prefillCompany ? `presso ${prefillCompany}` : "",
+      ]
+        .filter(Boolean)
+        .join(" ") + "."
+    : undefined;
 
   const userName =
     user.firstName ??
@@ -80,6 +94,8 @@ const NewInterviewPage = async () => {
   }
 
   return (
+    <>
+    <Navbar />
     <div className="flex flex-col gap-12 px-6 py-14 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-3">
@@ -100,8 +116,10 @@ const NewInterviewPage = async () => {
         suggestions={suggestions}
         recentInterviews={recentInterviews}
         recentInterviewsLabel={recentInterviewsLabel}
+        initialMessage={initialMessage}
       />
     </div>
+    </>
   );
 };
 

@@ -1,9 +1,13 @@
+import Navbar from "@/components/Navbar";
+
 export const metadata = {
   title: "Terms of Service – Intervoice",
 };
 
 export default function TermsPage() {
   return (
+    <>
+    <Navbar />
     <main className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-8 text-indigo-200">
       <div className="flex flex-col gap-2">
         <h1 className="text-indigo-100 text-3xl font-bold">Terms of Service</h1>
@@ -93,5 +97,6 @@ export default function TermsPage() {
         </p>
       </section>
     </main>
+    </>
   );
 }
