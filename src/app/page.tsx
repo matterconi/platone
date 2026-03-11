@@ -31,9 +31,6 @@ export default async function Home() {
 
   return (
     <main className="relative text-fg overflow-x-hidden">
-      {/* Grain overlay */}
-      <div className="grain-overlay" aria-hidden="true" />
-
       {/* ── Hero ── */}
       <HeroSection isLoggedIn={!!user} />
 
@@ -85,10 +82,10 @@ export default async function Home() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-white/5">
-        {/* Ghost wordmark */}
+        {/* Wordmark */}
         <div className="px-6 pt-14 pb-0 max-w-5xl mx-auto">
-          <p className="font-display text-[clamp(4rem,12vw,9rem)] font-extrabold leading-none tracking-tight select-none text-white/[0.2]">
-            Inter<span style={{ color: "rgba(184,255,0,0.22)" }}>voice</span>
+          <p className="font-display text-[clamp(4rem,12vw,9rem)] font-extrabold leading-none tracking-tight select-none text-white/[0.07]">
+            Inter<span style={{ color: "rgba(184,255,0,0.12)" }}>voice</span>
           </p>
         </div>
 
