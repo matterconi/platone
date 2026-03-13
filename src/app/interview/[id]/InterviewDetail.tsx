@@ -103,10 +103,10 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
 
           <div className="flex flex-col gap-2">
             <p className="text-indigo-400 text-xs uppercase tracking-widest">
-              Domande ({interview.questions.length})
+              Domande ({interview.questions?.length ?? 0})
             </p>
             <ol className="flex flex-col gap-2">
-              {interview.questions.map((q, i) => (
+              {interview.questions?.map((q, i) => (
                 <li key={i} className="text-indigo-100 text-sm">
                   {i + 1}. {q}
                 </li>
