@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const TYPE_STYLES: Record<string, { gradient: string; badge: string; label: string }> = {
+const TYPE_STYLES: Record<string, { topLine: string; badge: string; label: string }> = {
   technical: {
-    gradient: "from-[#0a2416] to-[#0d1a0e]",
+    topLine: "bg-accent",
     badge: "bg-[rgba(184,255,0,0.12)] text-accent",
     label: "Tecnico",
   },
   behavioral: {
-    gradient: "from-[#160a2d] to-[#0d0d1a]",
+    topLine: "bg-violet-400",
     badge: "bg-[rgba(167,139,250,0.15)] text-violet-300",
     label: "Comportamentale",
   },
   mixed: {
-    gradient: "from-[#2a150a] to-[#1a0f0d]",
+    topLine: "bg-orange-400",
     badge: "bg-[rgba(251,146,60,0.15)] text-orange-300",
     label: "Misto",
   },
@@ -86,14 +86,16 @@ const InterviewCard = ({
         "transition-all duration-300 group flex flex-col"
       )}
     >
-      {/* Gradient header */}
-      <div
-        className={cn(
-          "bg-linear-to-br px-5 pt-5 pb-4 flex flex-col gap-2",
-          style?.gradient ?? "from-[#1a1a20] to-[#0f0f13]"
-        )}
-      >
-        {/* Badges row */}
+      {/* Type accent line */}
+      {style ? (
+        <div className={cn("h-0.5 w-full shrink-0", style.topLine)} />
+      ) : (
+        <div className="h-0.5 w-full shrink-0 bg-[rgba(240,237,230,0.08)]" />
+      )}
+
+      {/* Card body */}
+      <div className="p-5 flex flex-col gap-3 flex-1">
+        {/* Badges */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {style && (
             <span
@@ -117,20 +119,17 @@ const InterviewCard = ({
           )}
         </div>
 
-        {/* Role title */}
+        {/* Role */}
         <h3 className="text-fg font-semibold text-base leading-snug line-clamp-2">
           {role ?? "Intervista"}
         </h3>
 
         {specialization && (
-          <span className="text-[rgba(240,237,230,0.45)] text-xs font-medium truncate">
+          <span className="text-[rgba(240,237,230,0.45)] text-xs font-medium truncate -mt-1">
             {specialization}
           </span>
         )}
-      </div>
 
-      {/* Body */}
-      <div className="p-5 flex flex-col gap-3 flex-1">
         {/* Tech tags */}
         {visibleTech.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
@@ -153,7 +152,7 @@ const InterviewCard = ({
         )}
 
         {/* Meta row */}
-        <div className="flex items-center justify-between gap-2 mt-auto">
+        <div className="flex items-center gap-3 mt-auto pt-3 border-t border-[rgba(240,237,230,0.05)]">
           {questionsCount != null && questionsCount > 0 && (
             <div className="flex items-center gap-1.5">
               <QuestionIcon />
@@ -163,7 +162,7 @@ const InterviewCard = ({
             </div>
           )}
           {formattedDate && (
-            <div className={cn("flex items-center gap-1.5", !(questionsCount && questionsCount > 0) && "ml-auto")}>
+            <div className="flex items-center gap-1.5 ml-auto">
               <CalendarIcon />
               <span className="text-[rgba(240,237,230,0.35)] text-xs">{formattedDate}</span>
             </div>
@@ -173,7 +172,7 @@ const InterviewCard = ({
         {/* CTA */}
         <Link
           href={interviewId ? `/interview/${interviewId}` : "#"}
-          className="w-full bg-accent/10 hover:bg-accent/20 text-accent text-sm font-semibold rounded-xl py-2.5 transition-colors text-center block"
+          className="w-full border border-accent/25 hover:border-accent/50 hover:bg-accent/8 text-accent text-sm font-semibold rounded-xl py-2.5 transition-all duration-200 text-center block"
         >
           Inizia sessione →
         </Link>

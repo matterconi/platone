@@ -171,7 +171,7 @@ export default function SubscriptionManager({
       {/* ── Piano attuale ── */}
       <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden">
 
-        {/* Header strip */}
+        {/* Header */}
         <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
             <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
@@ -193,12 +193,10 @@ export default function SubscriptionManager({
           </div>
         </div>
 
-        {/* Divider */}
         <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
 
         {/* Credits block */}
         <div className="px-6 py-5 flex flex-col gap-4">
-          {/* Numbers row */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
               <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold">
@@ -237,7 +235,9 @@ export default function SubscriptionManager({
             </div>
             <div className="flex justify-between text-[11px] text-[rgba(240,237,230,0.35)]">
               <span>{usagePercent}% utilizzato</span>
-              <span className={isLow ? "text-red-400 font-medium" : ""}>{isLow ? "Crediti in esaurimento" : `${100 - usagePercent}% disponibile`}</span>
+              <span className={isLow ? "text-red-400 font-medium" : ""}>
+                {isLow ? "Crediti in esaurimento" : `${100 - usagePercent}% disponibile`}
+              </span>
             </div>
           </div>
 
@@ -256,7 +256,9 @@ export default function SubscriptionManager({
                 </span>
                 <span className="text-fg text-sm font-medium">
                   {fmt(renewalInfo.nextBilledAt)}
-                  {renewalInfo.price && <span className="text-[rgba(240,237,230,0.4)] font-normal"> · {renewalInfo.price}/mese</span>}
+                  {renewalInfo.price && (
+                    <span className="text-[rgba(240,237,230,0.4)] font-normal"> · {renewalInfo.price}/mese</span>
+                  )}
                 </span>
               </div>
             );
@@ -272,7 +274,6 @@ export default function SubscriptionManager({
           )}
         </div>
 
-        {/* Divider */}
         <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
 
         {/* Actions footer */}
@@ -320,118 +321,115 @@ export default function SubscriptionManager({
       </div>
 
       {/* ── Right column: Cambia piano + Storico ── */}
-      <div className="flex flex-col gap-5">
+      <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden">
 
-      {/* ── Cambia piano ── */}
-      {otherPlans.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
-            Cambia piano
-          </p>
-          <div className="bg-[#0f0f13] rounded-xl ring-1 ring-[rgba(240,237,230,0.07)] divide-y divide-[rgba(240,237,230,0.06)]">
-            {otherPlans.map((p) => {
-              const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
-              const isThisDowngrading = downgrading === p.priceId;
-              const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
-              const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
-              return (
-                <div key={p.priceId} className="p-4 flex flex-col gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className={cn("size-2 rounded-full shrink-0", pa.dot)} />
-                    <div className="flex flex-col gap-0.5 flex-1">
-                      <span className="text-fg font-semibold text-sm">{p.name}</span>
-                      <span className="text-[rgba(240,237,230,0.4)] text-xs">
-                        {p.credits} crediti/mese · {p.price}
+        {/* Cambia piano header */}
+        {otherPlans.length > 0 && (
+          <>
+            <div className="px-6 pt-6 pb-5">
+              <p className="font-display text-lg font-bold text-fg leading-none">Cambia piano</p>
+              <p className="text-[rgba(240,237,230,0.4)] text-xs mt-1">
+                Il cambio di piano è attivo al prossimo rinnovo
+              </p>
+            </div>
+
+            <div className="h-px bg-[rgba(240,237,230,0.06)]" />
+
+            {/* Plan rows */}
+            <div className="divide-y divide-[rgba(240,237,230,0.05)]">
+              {otherPlans.map((p) => {
+                const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
+                const isThisDowngrading = downgrading === p.priceId;
+                const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
+                const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
+                return (
+                  <div key={p.priceId} className="px-6 py-4 flex items-center gap-4">
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("size-1.5 rounded-full shrink-0", pa.dot)} />
+                        <span className="text-fg font-semibold text-sm">{p.name}</span>
+                        {isScheduled && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-400/15 text-orange-300">
+                            Schedulato
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[rgba(240,237,230,0.4)] text-xs pl-3.5">
+                        {p.credits} crediti · {p.price}/mese
                       </span>
                     </div>
-                    {isScheduled && (
-                      <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-400/15 text-orange-300">
-                        Schedulato
-                      </span>
+                    {!isScheduled && (
+                      <button
+                        onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
+                        disabled={isThisDowngrading}
+                        className={cn(
+                          "shrink-0 h-8 px-4 rounded-lg border text-xs font-semibold transition-all duration-150 disabled:opacity-40 disabled:cursor-default",
+                          isUpgrade
+                            ? "border-accent/50 text-accent hover:border-accent hover:bg-accent/8"
+                            : "border-[rgba(240,237,230,0.12)] text-[rgba(240,237,230,0.55)] hover:text-fg hover:border-[rgba(240,237,230,0.22)] hover:bg-[rgba(240,237,230,0.04)]"
+                        )}
+                      >
+                        {isThisDowngrading ? "…" : isUpgrade ? "Upgrade" : "Downgrade"}
+                      </button>
                     )}
                   </div>
-                  {!isScheduled && (
-                    <button
-                      onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
-                      disabled={isThisDowngrading}
-                      className={cn(
-                        isUpgrade
-                          ? "cta-primary w-full justify-center h-10 text-sm"
-                          : cn(
-                            "w-full h-10 rounded border border-[rgba(240,237,230,0.12)] text-sm font-semibold",
-                            "text-[rgba(240,237,230,0.6)] hover:text-fg hover:border-[rgba(240,237,230,0.22)] hover:bg-[rgba(240,237,230,0.04)]",
-                            "transition-all duration-150"
-                          ),
-                        "disabled:opacity-40 disabled:cursor-default"
-                      )}
-                    >
-                      {isThisDowngrading ? "…" : `Passa a ${p.name}`}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Storico pagamenti (toggle) ── */}
-      {transactions.length > 0 && (
-        <div className="flex flex-col gap-0">
-          <button
-            onClick={() => setShowHistory((v) => !v)}
-            className={cn(
-              "flex items-center justify-between w-full px-5 py-4 rounded-2xl",
-              "bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)]",
-              "hover:ring-[rgba(240,237,230,0.12)] transition-all duration-200 text-left",
-              showHistory && "rounded-b-none ring-b-0"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect x="2" y="3" width="12" height="10" rx="2" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" />
-                <path d="M5 7h6M5 10h4" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              <span className="text-[rgba(240,237,230,0.6)] text-sm font-medium">
-                Storico pagamenti
-              </span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(240,237,230,0.07)] text-[rgba(240,237,230,0.4)]">
-                {transactions.length}
-              </span>
+                );
+              })}
             </div>
-            <span className="text-[rgba(240,237,230,0.35)]">
-              <ChevronDown open={showHistory} />
-            </span>
-          </button>
+          </>
+        )}
 
-          {showHistory && (
-            <div className="bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)] ring-t-0 rounded-b-2xl overflow-hidden">
-              <div className="h-px bg-[rgba(240,237,230,0.06)]" />
-              <div className="flex flex-col divide-y divide-[rgba(240,237,230,0.05)]">
-                {transactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between px-5 py-3.5">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-fg text-sm font-medium">
-                        {new Date(tx.createdAt).toLocaleDateString("it-IT", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                      <span className="text-[rgba(240,237,230,0.35)] text-xs capitalize">{tx.status}</span>
-                    </div>
-                    <span className="text-fg font-semibold text-sm tabular-nums">
-                      {tx.currency} {tx.amount}
-                    </span>
-                  </div>
-                ))}
+        {/* ── Storico pagamenti ── */}
+        {transactions.length > 0 && (
+          <>
+            <div className="h-px bg-[rgba(240,237,230,0.06)]" />
+
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              className="flex items-center justify-between w-full px-6 py-4 hover:bg-[rgba(240,237,230,0.02)] transition-colors text-left"
+            >
+              <div className="flex items-center gap-2.5">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <rect x="2" y="3" width="12" height="10" rx="2" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" />
+                  <path d="M5 7h6M5 10h4" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <span className="text-[rgba(240,237,230,0.6)] text-sm font-medium">Storico pagamenti</span>
+                <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded bg-[rgba(240,237,230,0.06)] text-[rgba(240,237,230,0.4)]">
+                  {transactions.length}
+                </span>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+              <span className="text-[rgba(240,237,230,0.35)]">
+                <ChevronDown open={showHistory} />
+              </span>
+            </button>
 
-      </div>{/* end right column */}
+            {showHistory && (
+              <>
+                <div className="h-px bg-[rgba(240,237,230,0.05)]" />
+                <div className="flex flex-col divide-y divide-[rgba(240,237,230,0.05)]">
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between px-6 py-3.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-fg text-sm font-medium">
+                          {new Date(tx.createdAt).toLocaleDateString("it-IT", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                        <span className="text-[rgba(240,237,230,0.35)] text-xs capitalize">{tx.status}</span>
+                      </div>
+                      <span className="text-fg font-semibold text-sm tabular-nums">
+                        {tx.currency} {tx.amount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

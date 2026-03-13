@@ -138,10 +138,21 @@ export default async function DashboardPage() {
 
       {/* Page header */}
       <div className="border-b border-[rgba(240,237,230,0.07)]">
-        <div className="max-w-5xl mx-auto px-6 py-10">
-          <h1 className="font-display text-4xl font-bold text-fg">
-            {firstName ? `Ciao, ${firstName} 👋` : "La tua area personale"}
-          </h1>
+        <div className="max-w-5xl mx-auto px-6 py-10 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[rgba(240,237,230,0.35)] mb-2">
+              Area personale
+            </p>
+            <h1 className="font-display text-4xl font-bold text-fg leading-none">
+              {firstName ? `Ciao, ${firstName}` : "La tua area"}
+            </h1>
+          </div>
+          <Link
+            href="/interview/new"
+            className="shrink-0 hidden sm:inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-accent/10 border border-accent/25 hover:border-accent/50 hover:bg-accent/15 text-accent text-sm font-semibold transition-all duration-200"
+          >
+            + Nuova intervista
+          </Link>
         </div>
       </div>
 
@@ -149,7 +160,8 @@ export default async function DashboardPage() {
 
         {/* Stats overview */}
         <AnimatedSection className="flex flex-col gap-6" delay={0}>
-          <div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">01</span>
             <h2 className="font-display text-2xl font-bold text-fg">Performance</h2>
           </div>
           <DashboardStats
@@ -169,15 +181,25 @@ export default async function DashboardPage() {
 
         {/* Interviste */}
         <AnimatedSection className="flex flex-col gap-6" delay={0}>
-          <div>
-            <h2 className="font-display text-2xl font-bold text-fg">Le tue interviste</h2>
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">02</span>
+              <h2 className="font-display text-2xl font-bold text-fg">Le tue interviste</h2>
+            </div>
+            <Link
+              href="/interview/new"
+              className="shrink-0 sm:hidden inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-accent/10 border border-accent/25 hover:border-accent/50 text-accent text-xs font-semibold transition-all duration-200"
+            >
+              + Nuova
+            </Link>
           </div>
           <Interviews />
         </AnimatedSection>
 
         {/* Profilo CV */}
         <AnimatedSection className="flex flex-col gap-6" delay={0.05}>
-          <div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">03</span>
             <h2 className="font-display text-2xl font-bold text-fg">Curriculum</h2>
           </div>
           <CvSection initialFilename={cvFilename} />
@@ -185,7 +207,8 @@ export default async function DashboardPage() {
 
         {/* Piano */}
         <AnimatedSection className="flex flex-col gap-6" delay={0.1}>
-          <div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">04</span>
             <h2 className="font-display text-2xl font-bold text-fg">Il tuo piano</h2>
           </div>
 
