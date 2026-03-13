@@ -4,10 +4,12 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Paddle, Environment } from "@paddle/paddle-node-sdk";
 import { getUserAccess } from "@/lib/subscription";
+import { PLAN_CREDITS } from "@/lib/credits";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import Interviews from "@/components/Interviews";
 import CvSection from "@/components/CvSection";
 import AnimatedSection from "@/components/AnimatedSection";
+import DashboardStats from "@/components/DashboardStats";
 import sql from "@/lib/db";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
@@ -20,14 +22,68 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const [access, user, cvRows] = await Promise.all([
+  const [access, user, cvRows, evalRows, usageRow, countRow] = await Promise.all([
     getUserAccess(userId),
     currentUser(),
     sql`SELECT cv_filename FROM users WHERE id = ${userId}`,
+    sql`
+      SELECT
+        created_at,
+        (data->'evaluation'->>'domainKnowledge')::int AS domain_knowledge,
+        (data->'evaluation'->>'problemSolving')::int   AS problem_solving,
+        (data->'evaluation'->>'communication')::int    AS communication,
+        data->'evaluation'->'strengths'                AS strengths
+      FROM interviews
+      WHERE user_id = ${userId}
+        AND data->'evaluation' IS NOT NULL
+        AND data->>'evaluation' != 'null'
+      ORDER BY created_at ASC
+    `,
+    sql`SELECT COALESCE(SUM(duration_seconds), 0) AS total_seconds FROM usage_logs WHERE user_id = ${userId}`,
+    sql`SELECT COUNT(*) AS total FROM interviews WHERE user_id = ${userId} AND finalized = true`,
   ]);
   const cvFilename: string | null = cvRows[0]?.cv_filename ?? null;
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   const firstName = user?.firstName ?? null;
+
+  // Process performance data for DashboardStats
+  type EvalRow = {
+    created_at: string;
+    domain_knowledge: number | null;
+    problem_solving: number | null;
+    communication: number | null;
+    strengths: string[] | null;
+  };
+
+  const performancePoints = (evalRows as EvalRow[])
+    .filter((r) => r.domain_knowledge !== null && r.problem_solving !== null && r.communication !== null)
+    .map((r) => {
+      const dk = r.domain_knowledge ?? 0;
+      const ps = r.problem_solving ?? 0;
+      const comm = r.communication ?? 0;
+      return {
+        date: new Date(r.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" }),
+        rawDate: r.created_at,
+        avgScore: Math.round(((dk + ps + comm) / 3) * 10) / 10,
+        domainKnowledge: dk,
+        problemSolving: ps,
+        communication: comm,
+      };
+    });
+
+  const avgOf = (key: "domainKnowledge" | "problemSolving" | "communication") =>
+    performancePoints.length
+      ? Math.round((performancePoints.reduce((s, p) => s + p[key], 0) / performancePoints.length) * 10) / 10
+      : 0;
+
+  const latestEval = (evalRows as EvalRow[]).findLast((r) => r.strengths);
+  const latestStrengths: string[] = Array.isArray(latestEval?.strengths)
+    ? (latestEval!.strengths as string[])
+    : [];
+
+  const totalMinutes = Math.floor(Number((usageRow[0] as { total_seconds: number })?.total_seconds ?? 0) / 60);
+  const totalInterviews = Number((countRow[0] as { total: number })?.total ?? 0);
+  const planCredits = access.plan ? (PLAN_CREDITS[access.plan] ?? 0) : 0;
 
   // Fetch transactions from Paddle if customer exists
   type Transaction = { id: string; createdAt: string; amount: string; currency: string; status: string };
@@ -93,6 +149,33 @@ export default async function DashboardPage() {
       </div>
 
       <main className="max-w-5xl mx-auto px-6 py-12 flex flex-col gap-16">
+
+        {/* Stats overview */}
+        <AnimatedSection className="flex flex-col gap-6" delay={0}>
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-accent">
+              Panoramica
+            </p>
+            <h2 className="font-display text-2xl font-bold text-fg">
+              Le tue performance
+            </h2>
+          </div>
+          <DashboardStats
+            performancePoints={performancePoints}
+            totalInterviews={totalInterviews}
+            totalMinutes={totalMinutes}
+            credits={access.credits ?? 0}
+            planCredits={planCredits}
+            latestStrengths={latestStrengths}
+            latestWeaknesses={[]}
+            avgDomainKnowledge={avgOf("domainKnowledge")}
+            avgProblemSolving={avgOf("problemSolving")}
+            avgCommunication={avgOf("communication")}
+            plan={access.plan}
+          />
+        </AnimatedSection>
+
+        <div className="h-px bg-[rgba(240,237,230,0.07)]" />
 
         {/* Interviste */}
         <AnimatedSection className="flex flex-col gap-6" delay={0}>
