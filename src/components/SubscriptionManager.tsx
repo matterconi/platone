@@ -166,7 +166,7 @@ export default function SubscriptionManager({
   const otherPlans = PLANS.filter((p) => p.name.toLowerCase() !== plan);
 
   return (
-    <div className="flex flex-col gap-5 max-w-lg">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl items-start">
 
       {/* ── Piano attuale ── */}
       <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden">
@@ -250,11 +250,15 @@ export default function SubscriptionManager({
               </p>
             );
             if (renewalInfo.nextBilledAt) return (
-              <p className="text-xs text-[rgba(240,237,230,0.4)]">
-                Rinnovo il{" "}
-                <span className="text-fg font-medium">{fmt(renewalInfo.nextBilledAt)}</span>
-                {renewalInfo.price && <> · {renewalInfo.price}/mese</>}
-              </p>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold">
+                  Rinnovo il
+                </span>
+                <span className="text-fg text-sm font-medium">
+                  {fmt(renewalInfo.nextBilledAt)}
+                  {renewalInfo.price && <span className="text-[rgba(240,237,230,0.4)] font-normal"> · {renewalInfo.price}/mese</span>}
+                </span>
+              </div>
             );
             return null;
           })()}
@@ -272,12 +276,16 @@ export default function SubscriptionManager({
         <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
 
         {/* Actions footer */}
-        <div className="px-6 py-4 flex flex-wrap gap-x-4 gap-y-2">
+        <div className="px-6 py-4 flex flex-wrap gap-2">
           {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && credits >= planCredits && (
             <button
               onClick={handleRefund}
               disabled={refunding}
-              className="text-xs text-[rgba(240,237,230,0.4)] hover:text-accent transition-colors disabled:opacity-40"
+              className={cn(
+                "text-xs font-medium px-3.5 py-2 rounded-lg border border-[rgba(240,237,230,0.1)]",
+                "text-[rgba(240,237,230,0.5)] hover:text-fg hover:border-[rgba(240,237,230,0.2)]",
+                "transition-all duration-150 disabled:opacity-40"
+              )}
             >
               {refunding ? "Rimborso in corso…" : "Richiedi rimborso"}
             </button>
@@ -286,7 +294,11 @@ export default function SubscriptionManager({
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className="text-xs text-[rgba(240,237,230,0.4)] hover:text-red-400 transition-colors disabled:opacity-40"
+              className={cn(
+                "text-xs font-medium px-3.5 py-2 rounded-lg border border-red-400/20",
+                "text-red-400/70 hover:text-red-400 hover:border-red-400/40 hover:bg-red-400/5",
+                "transition-all duration-150 disabled:opacity-40"
+              )}
             >
               {cancelling ? "Cancellazione in corso…" : "Cancella abbonamento"}
             </button>
@@ -295,13 +307,20 @@ export default function SubscriptionManager({
             <button
               onClick={handleRestore}
               disabled={restoring}
-              className="text-xs text-[rgba(240,237,230,0.4)] hover:text-fg transition-colors disabled:opacity-40"
+              className={cn(
+                "text-xs font-medium px-3.5 py-2 rounded-lg border border-accent/30",
+                "text-accent/70 hover:text-accent hover:border-accent/50 hover:bg-accent/5",
+                "transition-all duration-150 disabled:opacity-40"
+              )}
             >
               {restoring ? "Ripristino in corso…" : "Ripristina abbonamento"}
             </button>
           )}
         </div>
       </div>
+
+      {/* ── Right column: Cambia piano + Storico ── */}
+      <div className="flex flex-col gap-5">
 
       {/* ── Cambia piano ── */}
       {otherPlans.length > 0 && (
@@ -316,36 +335,47 @@ export default function SubscriptionManager({
               const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
               const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
               return (
-                <button
+                <div
                   key={p.priceId}
-                  onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
-                  disabled={isThisDowngrading || isScheduled}
                   className={cn(
-                    "flex items-center justify-between p-4 rounded-xl text-left transition-all duration-200",
+                    "flex flex-col gap-3 p-4 rounded-xl",
                     "bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)]",
-                    "hover:ring-[rgba(240,237,230,0.14)] hover:bg-[#141418]",
-                    "disabled:opacity-50 disabled:cursor-default"
+                    isUpgrade && "ring-accent/20"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <span className={cn("size-2 rounded-full shrink-0", pa.dot)} />
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-0.5 flex-1">
                       <span className="text-fg font-semibold text-sm">{p.name}</span>
                       <span className="text-[rgba(240,237,230,0.4)] text-xs">
                         {p.credits} crediti/mese · {p.price}
                       </span>
                     </div>
+                    {isScheduled && (
+                      <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-400/15 text-orange-300">
+                        Schedulato
+                      </span>
+                    )}
                   </div>
-                  {isScheduled ? (
-                    <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-400/15 text-orange-300">
-                      Schedulato
-                    </span>
-                  ) : (
-                    <span className="text-[rgba(240,237,230,0.3)] text-xs">
-                      {isThisDowngrading ? "…" : "Seleziona →"}
-                    </span>
+                  {!isScheduled && (
+                    <button
+                      onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
+                      disabled={isThisDowngrading}
+                      className={cn(
+                        isUpgrade
+                          ? "cta-primary w-full justify-center h-10 text-sm"
+                          : cn(
+                            "w-full h-10 rounded border border-[rgba(240,237,230,0.12)] text-sm font-semibold",
+                            "text-[rgba(240,237,230,0.6)] hover:text-fg hover:border-[rgba(240,237,230,0.22)] hover:bg-[rgba(240,237,230,0.04)]",
+                            "transition-all duration-150"
+                          ),
+                        "disabled:opacity-40 disabled:cursor-default"
+                      )}
+                    >
+                      {isThisDowngrading ? "…" : isUpgrade ? `Passa a ${p.name}` : `Passa a ${p.name}`}
+                    </button>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
@@ -407,6 +437,8 @@ export default function SubscriptionManager({
           )}
         </div>
       )}
+
+      </div>{/* end right column */}
     </div>
   );
 }
