@@ -91,7 +91,7 @@ export default function StatsSection() {
               <span className="text-accent">nel tuo futuro.</span>
             </h2>
             <p className="text-sm leading-relaxed max-w-sm mt-3" style={{ color: "rgba(240,237,230,0.38)" }}>
-              Chi si allena con Intervoice migliora in modo misurabile — sessione dopo sessione, skill dopo skill.
+              Chi si allena con Interspeak migliora in modo misurabile — sessione dopo sessione, skill dopo skill.
             </p>
           </div>
         </FadeInView>
@@ -172,7 +172,7 @@ export default function StatsSection() {
                   >
                     <span className="text-fg">{s.value}</span>
                     {s.unit && (
-                      <span className="text-accent" style={{ fontSize: "0.55em" }}>{s.unit}</span>
+                      <span className="text-accent" style={{ fontSize: "0.55em", marginLeft: "0.15em" }}>{s.unit}</span>
                     )}
                   </div>
                   <p className="text-sm font-semibold mt-2" style={{ color: "rgba(240,237,230,0.65)" }}>

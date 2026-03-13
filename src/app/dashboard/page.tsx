@@ -7,6 +7,8 @@ import { getUserAccess } from "@/lib/subscription";
 import { Button } from "@/components/ui/button";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import Interviews from "@/components/Interviews";
+import CvSection from "@/components/CvSection";
+import sql from "@/lib/db";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
   environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === "sandbox"
@@ -18,10 +20,12 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const [access, user] = await Promise.all([
+  const [access, user, cvRows] = await Promise.all([
     getUserAccess(userId),
     currentUser(),
+    sql`SELECT cv_filename FROM users WHERE id = ${userId}`,
   ]);
+  const cvFilename: string | null = cvRows[0]?.cv_filename ?? null;
 
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
 
@@ -80,6 +84,12 @@ export default async function DashboardPage() {
       <section className="flex flex-col gap-6">
         <h1 className="text-indigo-100 text-3xl font-bold">Le tue interview</h1>
         <Interviews />
+      </section>
+
+      {/* CV Profile */}
+      <section className="flex flex-col gap-6">
+        <h2 className="text-indigo-100 text-2xl font-bold">Il tuo profilo</h2>
+        <CvSection initialFilename={cvFilename} />
       </section>
 
       {/* Plan */}

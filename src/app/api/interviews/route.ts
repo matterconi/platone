@@ -69,7 +69,7 @@ Rules:
 - type: pick from allowed values, default to "mixed" if unclear.
 - domain: pick from allowed values.
 - specialization: 1-3 words, must NOT repeat role. Empty string if nothing specific.
-- tags: 1-3 items from categories stack/toolkit/authors/entities. Must NOT duplicate role/level/type/domain/specialization. Prefer reusing existing tags. Empty array if nothing distinctive.`,
+- tags: 1-3 items explicitly mentioned in the transcript or system prompt (stack, tools, authors, entities, frameworks, concepts). ONLY include what was directly named — never infer related items (e.g. if "CSS" and "Framer Motion" were mentioned, do NOT add "TypeScript" just because it is commonly used with React). Must NOT duplicate information already captured in role/level/type/domain/specialization. Prefer reusing existing tags. Empty array if nothing distinctive was explicitly named.`,
     prompt: `System prompt:\n${systemPrompt}\n\nTranscript:\n${transcript}`,
   });
 

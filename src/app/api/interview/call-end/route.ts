@@ -1,6 +1,6 @@
 import sql from "@/lib/db";
 import { NextRequest } from "next/server";
-import { getCreditsPerMinute } from "@/lib/credits";
+import { getCreditsPerMinute, calculateCreditsToDeduct } from "@/lib/credits";
 
 export async function POST(request: NextRequest) {
   const secret = request.headers.get("x-vapi-secret");
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   // Deduct credits only if this is a new log entry (not a VAPI retry)
   if (inserted) {
     const creditsPerMinute = getCreditsPerMinute(assistantId);
-    const creditsToDeduct = Math.ceil(durationSeconds / 60) * creditsPerMinute;
+    const creditsToDeduct = calculateCreditsToDeduct(durationSeconds, creditsPerMinute);
     await sql`
       UPDATE users
       SET credits = GREATEST(0, credits - ${creditsToDeduct})

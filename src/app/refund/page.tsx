@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 
 export const metadata = {
-  title: "Refund Policy – Intervoice",
+  title: "Refund Policy – Interspeak",
 };
 
 export default function RefundPage() {
@@ -17,7 +17,7 @@ export default function RefundPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-indigo-100 text-xl font-semibold">Payments & Billing</h2>
         <p className="text-sm leading-relaxed">
-          All payments for Intervoice subscriptions are processed by{" "}
+          All payments for Interspeak subscriptions are processed by{" "}
           <strong>Paddle.com Market Limited</strong>, which acts as the Merchant of Record.
           Your card statement will show a charge from Paddle.
         </p>

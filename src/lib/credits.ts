@@ -18,3 +18,7 @@ export function getCreditsPerMinute(assistantId?: string): number {
   if (!assistantId) return DEFAULT_CREDITS_PER_MINUTE;
   return ASSISTANT_CREDITS_PER_MINUTE[assistantId] ?? DEFAULT_CREDITS_PER_MINUTE;
 }
+
+export function calculateCreditsToDeduct(durationSeconds: number, creditsPerMinute: number): number {
+  return Math.ceil((durationSeconds / 60) * creditsPerMinute);
+}

@@ -217,7 +217,7 @@
   height: 180px;
   background: linear-gradient(to bottom, #07070a 0%, transparent 100%);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 /* Bottom fade — smooth transition out */

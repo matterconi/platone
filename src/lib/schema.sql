@@ -113,3 +113,7 @@ ALTER TABLE interviews ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
 
 -- Store the generated system prompt so the server can use it for post-call extraction
 ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS system_prompt TEXT;
+
+-- CV profile: store extracted text and original filename for personalized interviews
+ALTER TABLE users ADD COLUMN IF NOT EXISTS cv_text TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS cv_filename TEXT;

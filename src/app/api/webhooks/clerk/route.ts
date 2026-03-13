@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { Webhook } from "svix";
-import sql from "@/lib/db";
+import { createUser, updateUser, deleteUser } from "@/lib/userSync";
 
 type ClerkUserPayload = {
 	id: string;
@@ -40,26 +40,11 @@ export async function POST(request: Request) {
 
 	const { type, data } = event;
 	const name = [data.first_name, data.last_name].filter(Boolean).join(" ") || "User";
-	const email = data.email_addresses[0]?.email_address ?? "";
+	const email = data.email_addresses?.[0]?.email_address ?? "";
 
-	if (type === "user.created") {
-		await sql`
-			INSERT INTO users (id, name, email)
-			VALUES (${data.id}, ${name}, ${email})
-			ON CONFLICT (id) DO NOTHING
-		`;
-	}
-
-	if (type === "user.updated") {
-		await sql`
-			UPDATE users SET name = ${name}, email = ${email}
-			WHERE id = ${data.id}
-		`;
-	}
-
-	if (type === "user.deleted") {
-		await sql`DELETE FROM users WHERE id = ${data.id}`;
-	}
+	if (type === "user.created") await createUser(data.id, name, email);
+	if (type === "user.updated") await updateUser(data.id, name, email);
+	if (type === "user.deleted") await deleteUser(data.id);
 
 	return Response.json({ success: true }, { status: 200 });
 }

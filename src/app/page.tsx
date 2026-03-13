@@ -85,7 +85,7 @@ export default async function Home() {
         {/* Wordmark */}
         <div className="px-6 pt-14 pb-0 max-w-5xl mx-auto">
           <p className="font-display text-[clamp(4rem,12vw,9rem)] font-extrabold leading-none tracking-tight select-none text-white/[0.07]">
-            Inter<span style={{ color: "rgba(184,255,0,0.12)" }}>voice</span>
+            Inter<span style={{ color: "rgba(184,255,0,0.12)" }}>speak</span>
           </p>
         </div>
 
@@ -123,8 +123,8 @@ export default async function Home() {
 
         {/* Bottom bar */}
         <div className="px-6 py-10 max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="font-display text-xs font-bold text-white/20 tracking-tight">Intervoice</span>
-          <span className="text-xs text-white/15">© {new Date().getFullYear()} Intervoice. Tutti i diritti riservati.</span>
+          <span className="font-display text-xs font-bold text-white/20 tracking-tight">Interspeak</span>
+          <span className="text-xs text-white/15">© {new Date().getFullYear()} Interspeak. Tutti i diritti riservati.</span>
         </div>
       </footer>
 

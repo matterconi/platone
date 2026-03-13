@@ -51,7 +51,7 @@ const Navbar = () => {
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <NavLogo />
           <span className="font-bold tracking-tight text-base" style={{ fontFamily: "var(--font-syne, inherit)", color: "var(--fg)" }}>
-            Inter<span style={{ color: "var(--accent)" }}>voice</span>
+            Inter<span style={{ color: "var(--accent)" }}>speak</span>
           </span>
         </Link>
 

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { SignJWT } from "jose";
+
 // — Mock delle dipendenze —
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/db", () => ({ default: vi.fn() }));
@@ -26,6 +28,7 @@ const mockAuth = auth as unknown as ReturnType<typeof vi.fn>;
 const mockSql = sql as unknown as ReturnType<typeof vi.fn>;
 const mockGetUserAccess = getUserAccess as ReturnType<typeof vi.fn>;
 const mockGenerateObject = generateObject as ReturnType<typeof vi.fn>;
+const mockSignJWT = SignJWT as ReturnType<typeof vi.fn>;
 
 // — Helper: costruisce una Request POST con body JSON —
 function makeRequest(body: unknown = {}) {
@@ -83,6 +86,32 @@ describe("subscription attiva", () => {
     expect(body.webCall.id).toBe("call_123");
   });
 
+  it("chiama VAPI con Authorization: Bearer <jwt>", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: "user_123" });
+    mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: true, plan: "pro", credits: 100 });
+    mockSql.mockResolvedValueOnce([]); // extras query
+    mockSql.mockResolvedValueOnce([]); // interview_sessions insert
+    mockGenerateObject.mockResolvedValueOnce({ object: { valid: true } });
+    mockVapiSuccess();
+
+    await POST(makeRequest());
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://api.vapi.ai/call/web",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer mocked-jwt-token",
+        }),
+      })
+    );
+
+    const instance = mockSignJWT.mock.results[0].value;
+    expect(instance.sign).toHaveBeenCalledWith(
+      new TextEncoder().encode("sk-test")
+    );
+    expect(mockSignJWT).toHaveBeenCalledWith({ orgId: "org-test" });
+  });
+
   it("restituisce 403 se ha crediti esauriti", async () => {
     mockAuth.mockResolvedValueOnce({ userId: "user_123" });
     mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: true, plan: "pro", credits: 0 });
@@ -111,7 +140,7 @@ describe("trial", () => {
   it("restituisce 200 se il trial non è stato usato", async () => {
     mockAuth.mockResolvedValueOnce({ userId: "user_123" });
     mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: false, trialUsed: false });
-    mockSql.mockResolvedValueOnce([]); // UPDATE trial_used
+    mockSql.mockResolvedValueOnce([{ id: "user_123" }]); // UPDATE trial_used
     mockSql.mockResolvedValueOnce([]); // interview_sessions insert
     mockGenerateObject.mockResolvedValueOnce({ object: { valid: true } });
     mockVapiSuccess();
@@ -127,7 +156,16 @@ describe("trial", () => {
   it("restituisce 403 se il trial è già stato usato", async () => {
     mockAuth.mockResolvedValueOnce({ userId: "user_123" });
     mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: false, trialUsed: true });
+    const req = makeRequest();
+    const res = await POST(req);
 
+    expect(res.status).toBe(403);
+  });
+
+  it("restituisce 403 se il lock atomico fallisce (concorrenza)", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: "user_123" });
+    mockGetUserAccess.mockResolvedValueOnce({ hasActiveSubscription: false, trialUsed: false });
+    mockSql.mockResolvedValueOnce([]);
     const req = makeRequest();
     const res = await POST(req);
 

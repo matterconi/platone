@@ -35,6 +35,7 @@ export default function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
         <div className="hero-gradient" aria-hidden="true" />
         <Navbar />
 
+        <div className="hero-fade-bottom" aria-hidden="true" />
         <div className="relative px-6 pt-24 pb-20 max-w-5xl mx-auto">
           {/* Floating radial glow */}
           <motion.div

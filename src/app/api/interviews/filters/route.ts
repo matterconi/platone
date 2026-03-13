@@ -9,17 +9,19 @@ export async function GET(_request: NextRequest) {
   try {
     const [row] = await sql`
       SELECT
-        (SELECT array_agg(DISTINCT type)          FROM interviews WHERE user_id = ${userId}) AS types,
-        (SELECT array_agg(DISTINCT specialization) FROM interviews WHERE user_id = ${userId} AND specialization IS NOT NULL) AS specializations,
-        (SELECT array_agg(DISTINCT t)              FROM (SELECT unnest(techstack) AS t FROM interviews WHERE user_id = ${userId}) sub) AS techs
+        (SELECT array_agg(DISTINCT type)   FROM interviews WHERE user_id = ${userId} AND type IS NOT NULL)   AS types,
+        (SELECT array_agg(DISTINCT level)  FROM interviews WHERE user_id = ${userId} AND level IS NOT NULL)  AS levels,
+        (SELECT array_agg(DISTINCT domain) FROM interviews WHERE user_id = ${userId} AND domain IS NOT NULL) AS domains,
+        (SELECT array_agg(DISTINCT t)      FROM (SELECT unnest(tags) AS t FROM interviews WHERE user_id = ${userId}) sub) AS tags
     `;
 
     return Response.json({
       success: true,
       data: {
-        types: row.types ?? [],
-        specializations: row.specializations ?? [],
-        techs: row.techs ?? [],
+        types:   row.types   ?? [],
+        levels:  row.levels  ?? [],
+        domains: row.domains ?? [],
+        tags:    row.tags    ?? [],
       },
     });
   } catch (error) {

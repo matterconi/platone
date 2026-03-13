@@ -17,7 +17,7 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "Intervoice – AI Voice Interview Coach",
+  title: "Interspeak – AI Voice Interview Coach",
   description: "Allenati per i colloqui di lavoro con un AI voice coach. Feedback in tempo reale, tutte le tipologie di interview.",
 };
 

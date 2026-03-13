@@ -107,6 +107,10 @@ interface RecentInterview {
   type: string;
   level: string;
   techstack: string[];
+  specialization?: string | null;
+  questions?: string[];
+  evaluation?: Evaluation | null;
+  createdAt?: string | null;
 }
 
 interface AgentProps {
@@ -117,6 +121,7 @@ interface AgentProps {
   suggestions?: InterviewSuggestion[];
   recentInterviews?: RecentInterview[];
   recentInterviewsLabel?: string;
+  cvFilename?: string | null;
   // try-again
   interviewId?: string;
   questions?: string[];
@@ -126,6 +131,7 @@ interface AgentProps {
   type?: string;
   techstack?: string[];
   specialization?: string;
+  initialMessage?: string;
 }
 
 interface RouteParams {

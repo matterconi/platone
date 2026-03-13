@@ -77,6 +77,8 @@ export async function POST(req: Request) {
   const mode: string = body.mode ?? "new";
   const assistantId: string | undefined = body.assistantId;
   const userName: string = body.userName ?? "";
+  // Optional document context (extracted from CV or job posting, never shown to user)
+  const documentContext: string | undefined = body.documentContext;
   // Mode-specific variableValues (optional — VAPI asks for missing data during the call)
   const extraVariables: Record<string, string> = body.extraVariables ?? {};
   // User-selected session cap: null = unlimited (bounded only by credits)
@@ -145,6 +147,22 @@ Conduct the session:
   } else {
     // New or change-questions: use Deepseek to generate systemPrompt
     let deepseekUserMessage = userMessage;
+
+    // Fetch user's CV profile from DB (if saved)
+    const [userRow] = await sql`SELECT cv_text FROM users WHERE id = ${userId}`;
+    const cvText: string | null = userRow?.cv_text ?? null;
+
+    // Append job posting context (from URL fetch)
+    if (documentContext) {
+      deepseekUserMessage = deepseekUserMessage
+        ? `${deepseekUserMessage}\n\n---\nAnnuncio di lavoro:\n${documentContext}`
+        : `Annuncio di lavoro:\n${documentContext}`;
+    }
+
+    // Append CV as candidate profile — always included if available
+    if (cvText) {
+      deepseekUserMessage += `\n\n---\nCV del candidato (usa queste informazioni per personalizzare le domande, fare riferimento a esperienze specifiche e calibrare il livello):\n${cvText}`;
+    }
 
     if (mode === "change-questions" && !userMessage) {
       // Reconstruct context as userMessage so Deepseek generates new questions for the same role

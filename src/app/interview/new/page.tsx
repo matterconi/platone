@@ -27,97 +27,97 @@ const NewInterviewPage = async ({ searchParams }: RouteParams) => {
     user.emailAddresses[0]?.emailAddress ??
     "Candidato";
 
-  let suggestions: InterviewSuggestion[] = [];
   let recentInterviews: RecentInterview[] = [];
   let recentInterviewsLabel = "Le tue ultime interviste";
+  let cvFilename: string | null = null;
 
   try {
-    // User's own recent finalized interviews
-    const userRows = await sql`
-      SELECT id, role, type, level, techstack
-      FROM interviews
-      WHERE user_id = ${user.id} AND finalized = TRUE
-      ORDER BY created_at DESC
-      LIMIT 4
-    `;
-    recentInterviews = userRows.map((r) => ({
-      id: r.id,
-      role: r.role ?? "",
-      type: r.type ?? "",
-      level: r.level ?? "",
-      techstack: r.techstack ?? [],
-    }));
+    const parseEvaluation = (row: Record<string, unknown>): Evaluation | null => {
+      try {
+        const raw = row.data;
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        return (parsed as { evaluation?: Evaluation })?.evaluation ?? null;
+      } catch {
+        return null;
+      }
+    };
+
+    const mapRow = (r: Record<string, unknown>): RecentInterview => ({
+      id: r.id as string,
+      title: (r.title as string | null) ?? null,
+      role: (r.role as string) ?? "",
+      type: (r.type as string) ?? "",
+      level: (r.level as string) ?? "",
+      techstack: (r.techstack as string[]) ?? [],
+      specialization: (r.specialization as string | null) ?? null,
+      questions: (r.questions as string[]) ?? [],
+      evaluation: parseEvaluation(r),
+      createdAt: (r.created_at as Date | null)?.toISOString() ?? null,
+    });
+
+    const [userRow, userRows] = await Promise.all([
+      sql`SELECT cv_filename FROM users WHERE id = ${user.id}`,
+      sql`
+        SELECT id, title, role, type, level, techstack, specialization,
+               questions, data, created_at
+        FROM interviews
+        WHERE user_id = ${user.id} AND finalized = TRUE
+        ORDER BY created_at DESC
+        LIMIT 4
+      `,
+    ]);
+
+    cvFilename = userRow[0]?.cv_filename ?? null;
+    recentInterviews = userRows.map(mapRow);
+    console.log("[new/page] userRows count:", userRows.length, "| mapped:", recentInterviews.length);
+    if (userRows[0]) console.log("[new/page] first raw row keys:", Object.keys(userRows[0]), "| data type:", typeof userRows[0].data, "| data sample:", JSON.stringify(userRows[0].data)?.slice(0, 120));
 
     // If user has no interviews, show community
     if (recentInterviews.length === 0) {
       const communityRows = await sql`
-        SELECT id, role, type, level, techstack
+        SELECT id, title, role, type, level, techstack, specialization,
+               questions, data, created_at
         FROM interviews
         WHERE finalized = TRUE
         ORDER BY created_at DESC
         LIMIT 4
       `;
-      recentInterviews = communityRows.map((r) => ({
-        id: r.id,
-        role: r.role ?? "",
-        type: r.type ?? "",
-        level: r.level ?? "",
-        techstack: r.techstack ?? [],
-      }));
+      recentInterviews = communityRows.map(mapRow);
       recentInterviewsLabel = "Dalla community";
+      console.log("[new/page] community fallback count:", communityRows.length);
     }
-
-    // Suggestion chips (deduplicated)
-    const chipRows = await sql`
-      SELECT role, type, level, techstack
-      FROM interviews
-      WHERE finalized = TRUE
-      ORDER BY created_at DESC
-      LIMIT 8
-    `;
-    const seen = new Set<string>();
-    for (const r of chipRows) {
-      const key = `${r.level}|${r.role}|${r.type}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        suggestions.push({
-          role: r.role ?? "",
-          type: r.type ?? "",
-          level: r.level ?? "",
-          techstack: r.techstack ?? [],
-        });
-      }
-    }
-    suggestions = suggestions.slice(0, 5);
-  } catch {
-    // silently ignore
+  } catch (err) {
+    console.error("[new/page] recentInterviews fetch failed:", err);
   }
 
   return (
     <>
     <Navbar />
-    <div className="flex flex-col gap-12 px-6 py-14 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col gap-3">
-        <h1 className="text-slate-50 text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
-          Di cosa vuoi essere<br className="hidden sm:block" /> intervistato?
-        </h1>
-        <p className="text-slate-400 text-base leading-relaxed max-w-lg">
-          Scegli il tuo intervistatore e descrivi il ruolo — l&apos;AI genererà
-          le domande giuste e ti condurrà l&apos;intervista via voce.
-        </p>
-      </div>
+    <div className="relative min-h-screen">
+      <div className="relative flex flex-col gap-12 px-6 py-14 max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col gap-3">
+          <h1 className="font-display text-4xl sm:text-5xl font-extrabold leading-[0.95] tracking-tight text-(--fg)">
+            Di cosa vuoi essere<br className="hidden sm:block" />{" "}
+            <span className="text-accent">intervistato?</span>
+          </h1>
+          <p className="text-base leading-[1.8] max-w-lg" style={{ color: "rgba(240,237,230,0.45)" }}>
+            Scegli il tuo intervistatore e descrivi il ruolo — l&apos;AI genererà
+            le domande giuste e ti condurrà l&apos;intervista via voce.
+          </p>
+        </div>
 
-      <Agent
-        userName={userName}
-        userId={user.id}
-        mode="new"
-        redirectOnFinish="/"
-        suggestions={suggestions}
-        recentInterviews={recentInterviews}
-        recentInterviewsLabel={recentInterviewsLabel}
-        initialMessage={initialMessage}
-      />
+        <Agent
+          userName={userName}
+          userId={user.id}
+          mode="new"
+          redirectOnFinish="/"
+          cvFilename={cvFilename}
+          recentInterviews={recentInterviews}
+          recentInterviewsLabel={recentInterviewsLabel}
+          initialMessage={initialMessage}
+        />
+      </div>
     </div>
     </>
   );

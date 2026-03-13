@@ -23,7 +23,7 @@ const REVIEWS = [
     name: "Marco R.",
     role: "Data Scientist",
     stars: 5,
-    text: "Il case study mi terrorizzava. Intervoice mi ha fatto ripetere la struttura decine di volte, sessione dopo sessione. Ho preso l'offerta.",
+    text: "Il case study mi terrorizzava. Interspeak mi ha fatto ripetere la struttura decine di volte, sessione dopo sessione. Ho preso l'offerta.",
   },
   {
     avatar: "https://i.pravatar.cc/72?img=9",
@@ -37,7 +37,7 @@ const REVIEWS = [
     name: "Andrea P.",
     role: "Finance Analyst",
     stars: 5,
-    text: "Con Intervoice ho simulato colloqui alle 11 di sera prima della sessione vera. Nessun coach umano avrebbe retto quei ritmi. L'AI sì.",
+    text: "Con Interspeak ho simulato colloqui alle 11 di sera prima della sessione vera. Nessun coach umano avrebbe retto quei ritmi. L'AI sì.",
   },
   {
     avatar: "https://i.pravatar.cc/72?img=20",
@@ -141,7 +141,7 @@ export default function TestimonialsSection() {
               Cosa dicono gli utenti.
             </h2>
             <p className="text-sm leading-relaxed max-w-sm mt-2" style={{ color: "rgba(240,237,230,0.38)" }}>
-              Storie reali di chi ha usato Intervoice per prepararsi e ottenere l&apos;offerta.
+              Storie reali di chi ha usato Interspeak per prepararsi e ottenere l&apos;offerta.
             </p>
           </div>
         </FadeInView>
