@@ -78,6 +78,7 @@ export default function Interviews() {
       .then((res) => res.json())
       .then((json) => {
         if (!json.success) throw new Error(json.error ?? "Unknown error");
+        console.log("[Interviews] raw API data:", JSON.stringify(json.data));
         const mapped: Interview[] = (json.data as InterviewRow[]).map((r) => ({
           id: r.id,
           userId: r.user_id,
@@ -90,6 +91,7 @@ export default function Interviews() {
           finalized: r.finalized,
           createdAt: r.created_at,
         }));
+        console.log("[Interviews] mapped interviews:", mapped.map(i => ({ id: i.id, role: i.role, techstack: i.techstack, questions: i.questions })));
         setInterviews(mapped);
         setTotal(Number(json.total));
       })

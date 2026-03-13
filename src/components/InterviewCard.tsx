@@ -18,6 +18,7 @@ const InterviewCard = ({
   techstack,
   createdAt,
 }: InterviewCardProps) => {
+  console.log("[InterviewCard] props:", { interviewId, role, type, techstack, createdAt });
   const coverIndex = interviewId
     ? hashString(interviewId) % interviewCovers.length
     : 0;
