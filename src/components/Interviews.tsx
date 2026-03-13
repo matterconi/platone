@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import InterviewCard from "@/components/InterviewCard";
+import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
@@ -25,6 +26,56 @@ interface InterviewRow {
   total_count: number;
 }
 
+function ChevronDown() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="pointer-events-none">
+      <path
+        d="M3 5l4 4 4-4"
+        stroke="rgba(240,237,230,0.4)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SelectField({
+  value,
+  onChange,
+  placeholder,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  options: string[];
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn(
+          "bg-[#0f0f13] rounded-xl pl-3 pr-8 py-2.5 text-sm ring-1 ring-[rgba(240,237,230,0.07)]",
+          "focus:ring-[rgba(184,255,0,0.4)] outline-none appearance-none cursor-pointer transition",
+          value ? "text-fg" : "text-[rgba(240,237,230,0.4)]"
+        )}
+      >
+        <option value="" className="bg-[#0f0f13] text-[rgba(240,237,230,0.4)]">{placeholder}</option>
+        {options.map((o) => (
+          <option key={o} value={o} className="bg-[#0f0f13] text-fg">
+            {o}
+          </option>
+        ))}
+      </select>
+      <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
+        <ChevronDown />
+      </span>
+    </div>
+  );
+}
+
 export default function Interviews() {
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     types: [],
@@ -37,28 +88,26 @@ export default function Interviews() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter state
   const [roleInput, setRoleInput] = useState("");
-  const [role, setRole] = useState(""); // debounced
+  const [role, setRole] = useState("");
   const [type, setType] = useState("");
   const [specialization, setSpecialization] = useState("");
   const [tech, setTech] = useState("");
   const [offset, setOffset] = useState(0);
 
-  // Fetch filter options on mount
   useEffect(() => {
     fetch("/api/interviews/filters")
       .then((res) => res.json())
       .then((json) => {
-        if (json.success) setFilterOptions({
-          types: json.data.types ?? [],
-          specializations: json.data.domains ?? [],
-          techs: json.data.tags ?? [],
-        });
+        if (json.success)
+          setFilterOptions({
+            types: json.data.types ?? [],
+            specializations: json.data.domains ?? [],
+            techs: json.data.tags ?? [],
+          });
       });
   }, []);
 
-  // Debounce role input
   useEffect(() => {
     const id = setTimeout(() => {
       setRole(roleInput);
@@ -67,7 +116,6 @@ export default function Interviews() {
     return () => clearTimeout(id);
   }, [roleInput]);
 
-  // Fetch interviews on filter/pagination change
   const fetchInterviews = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -105,70 +153,107 @@ export default function Interviews() {
     fetchInterviews();
   }, [fetchInterviews]);
 
+  const resetFilters = () => {
+    setRoleInput("");
+    setRole("");
+    setType("");
+    setSpecialization("");
+    setTech("");
+    setOffset(0);
+  };
+
+  const activeCount = [role, type, specialization, tech].filter(Boolean).length;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE);
-  const hasActiveFilter = role || type || specialization || tech;
-
-  const pillClass = (active: boolean) =>
-    `rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
-      active
-        ? "bg-violet-300 text-zinc-950"
-        : "bg-zinc-800 text-indigo-400 hover:text-indigo-100"
-    }`;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Filtri */}
-      <div className="flex flex-col gap-3">
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-3 items-center">
         <input
           type="text"
-          placeholder="Cerca per ruolo..."
+          placeholder="Cerca per ruolo…"
           value={roleInput}
           onChange={(e) => setRoleInput(e.target.value)}
-          className="bg-zinc-800 rounded-full px-5 py-2.5 text-indigo-100 placeholder:text-indigo-400 text-sm outline-none focus:ring-1 focus:ring-violet-300/50 sm:max-w-xs"
+          className="bg-[#0f0f13] rounded-xl px-4 py-2.5 text-fg placeholder:text-[rgba(240,237,230,0.3)] text-sm ring-1 ring-[rgba(240,237,230,0.07)] focus:ring-[rgba(184,255,0,0.4)] outline-none transition w-full sm:w-52"
         />
 
         {filterOptions.types.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => { setType(""); setOffset(0); }} className={pillClass(type === "")}>Tutti</button>
-            {filterOptions.types.map((t) => (
-              <button key={t} onClick={() => { setType(t === type ? "" : t); setOffset(0); }} className={pillClass(type === t)}>{t}</button>
-            ))}
-          </div>
+          <SelectField
+            value={type}
+            onChange={(v) => { setType(v); setOffset(0); }}
+            placeholder="Tutti i tipi"
+            options={filterOptions.types}
+          />
         )}
 
         {filterOptions.specializations.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => { setSpecialization(""); setOffset(0); }} className={pillClass(specialization === "")}>Tutte le spec.</button>
-            {filterOptions.specializations.map((s) => (
-              <button key={s} onClick={() => { setSpecialization(s === specialization ? "" : s); setOffset(0); }} className={pillClass(specialization === s)}>{s}</button>
-            ))}
-          </div>
+          <SelectField
+            value={specialization}
+            onChange={(v) => { setSpecialization(v); setOffset(0); }}
+            placeholder="Tutte le aree"
+            options={filterOptions.specializations}
+          />
         )}
 
         {filterOptions.techs.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => { setTech(""); setOffset(0); }} className={pillClass(tech === "")}>Tutti i tech</button>
-            {filterOptions.techs.map((t) => (
-              <button key={t} onClick={() => { setTech(t === tech ? "" : t); setOffset(0); }} className={pillClass(tech === t)}>{t}</button>
-            ))}
+          <SelectField
+            value={tech}
+            onChange={(v) => { setTech(v); setOffset(0); }}
+            placeholder="Tutti i tech"
+            options={filterOptions.techs}
+          />
+        )}
+
+        {activeCount > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="bg-accent/15 text-accent text-xs rounded-full px-2.5 py-1 font-medium">
+              {activeCount} {activeCount === 1 ? "filtro attivo" : "filtri attivi"}
+            </span>
+            <button
+              onClick={resetFilters}
+              className="text-[rgba(240,237,230,0.4)] hover:text-fg text-base transition-colors leading-none"
+              aria-label="Rimuovi filtri"
+            >
+              ×
+            </button>
           </div>
         )}
       </div>
 
-      {/* Risultati */}
+      {/* Results */}
       {loading ? (
-        <p className="text-indigo-400">Caricamento...</p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden animate-pulse"
+            >
+              <div className="h-20 bg-white/3" />
+              <div className="p-5 flex flex-col gap-3">
+                <div className="h-3 bg-white/5 rounded-full w-2/3" />
+                <div className="h-3 bg-white/4 rounded-full w-1/3" />
+                <div className="h-9 bg-white/3 rounded-xl mt-2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : error ? (
-        <p className="text-indigo-400">Errore: {error}</p>
+        <p className="text-[rgba(240,237,230,0.45)] text-sm">Errore: {error}</p>
       ) : interviews.length === 0 ? (
-        <p className="text-indigo-400">
-          {hasActiveFilter
-            ? "Nessuna interview corrisponde ai filtri."
-            : "Non hai ancora completato nessuna interview."}
-        </p>
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="opacity-20">
+            <rect x="6" y="10" width="28" height="24" rx="3" stroke="#f0ede6" strokeWidth="1.5" />
+            <path d="M13 18h14M13 24h8" stroke="#f0ede6" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <p className="text-[rgba(240,237,230,0.4)] text-sm text-center">
+            {activeCount > 0
+              ? "Nessuna intervista corrisponde ai filtri."
+              : "Non hai ancora completato nessuna intervista."}
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {interviews.map((interview) => (
             <InterviewCard
               key={interview.id}
@@ -183,23 +268,23 @@ export default function Interviews() {
         </div>
       )}
 
-      {/* Paginazione */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
           <button
             disabled={currentPage === 0}
             onClick={() => setOffset((p) => Math.max(0, p - PAGE_SIZE))}
-            className="rounded-full px-4 py-1.5 text-sm bg-zinc-800 text-indigo-400 disabled:opacity-40 cursor-pointer hover:text-indigo-100"
+            className="rounded-full px-4 py-1.5 text-sm bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)] text-[rgba(240,237,230,0.45)] disabled:opacity-30 hover:text-fg hover:ring-[rgba(240,237,230,0.14)] transition cursor-pointer"
           >
             ←
           </button>
-          <span className="text-indigo-400 text-sm">
+          <span className="text-[rgba(240,237,230,0.45)] text-sm tabular-nums">
             {currentPage + 1} / {totalPages}
           </span>
           <button
             disabled={currentPage >= totalPages - 1}
             onClick={() => setOffset((p) => p + PAGE_SIZE)}
-            className="rounded-full px-4 py-1.5 text-sm bg-zinc-800 text-indigo-400 disabled:opacity-40 cursor-pointer hover:text-indigo-100"
+            className="rounded-full px-4 py-1.5 text-sm bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)] text-[rgba(240,237,230,0.45)] disabled:opacity-30 hover:text-fg hover:ring-[rgba(240,237,230,0.14)] transition cursor-pointer"
           >
             →
           </button>
