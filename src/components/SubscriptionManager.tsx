@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
-import { Button } from "@/components/ui/button";
 import { PLAN_CREDITS, DEFAULT_CREDITS_PER_MINUTE } from "@/lib/credits";
+import { cn } from "@/lib/utils";
 
 const PLANS = [
   { name: "Casual", priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_CASUAL!, credits: 100, price: "$9.90" },
@@ -12,10 +12,11 @@ const PLANS = [
 ];
 
 const PLAN_LABELS: Record<string, string> = { casual: "Casual", regular: "Regular", pro: "Pro" };
-const PLAN_COLORS: Record<string, string> = {
-  casual: "bg-indigo-600/30 text-indigo-100",
-  regular: "bg-violet-300/20 text-violet-300",
-  pro: "bg-green-400/20 text-green-400",
+
+const PLAN_ACCENT: Record<string, { dot: string; badge: string }> = {
+  casual: { dot: "bg-[rgba(240,237,230,0.4)]", badge: "bg-[rgba(240,237,230,0.08)] text-[rgba(240,237,230,0.7)]" },
+  regular: { dot: "bg-violet-400", badge: "bg-violet-400/15 text-violet-300" },
+  pro:     { dot: "bg-accent",     badge: "bg-accent/15 text-accent" },
 };
 
 type Transaction = {
@@ -43,6 +44,26 @@ type Props = {
   renewalInfo: RenewalInfo;
 };
 
+function ChevronDown({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      className={cn("transition-transform duration-200", open && "rotate-180")}
+    >
+      <path
+        d="M4 6l4 4 4-4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function SubscriptionManager({
   plan,
   credits,
@@ -58,18 +79,22 @@ export default function SubscriptionManager({
   const [cancelDone, setCancelDone] = useState(nextPlan === "cancelled");
   const [refunding, setRefunding] = useState(false);
   const [refundResult, setRefundResult] = useState<{ previousPlan: string | null } | null>(null);
-  const [downgrading, setDowngrading] = useState<string | null>(null); // priceId in corso
+  const [downgrading, setDowngrading] = useState<string | null>(null);
   const [downgradedPlan, setDowngradedPlan] = useState<string | null>(
     nextPlan && nextPlan !== "cancelled" ? nextPlan : null
   );
   const [restoring, setRestoring] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const planCredits = PLAN_CREDITS[plan] ?? 0;
   const extraCredits = Math.max(0, credits - planCredits);
   const planCreditsRemaining = Math.min(credits, planCredits);
   const remainingMinutes = Math.floor(credits / DEFAULT_CREDITS_PER_MINUTE);
-  const usagePercent = planCredits > 0 ? Math.min(100, Math.round(((planCredits - planCreditsRemaining) / planCredits) * 100)) : 0;
+  const usagePercent = planCredits > 0
+    ? Math.min(100, Math.round(((planCredits - planCreditsRemaining) / planCredits) * 100))
+    : 0;
   const isLow = usagePercent >= 80;
+  const accent = PLAN_ACCENT[plan] ?? PLAN_ACCENT.casual;
 
   useEffect(() => {
     initializePaddle({
@@ -95,15 +120,9 @@ export default function SubscriptionManager({
     try {
       const res = await fetch("/api/subscription/refund", { method: "POST" });
       const data = await res.json();
-      if (res.ok) {
-        setRefundResult(data);
-        setCancelDone(true);
-      } else {
-        alert(data.error ?? "Errore nel rimborso. Riprova.");
-      }
-    } finally {
-      setRefunding(false);
-    }
+      if (res.ok) { setRefundResult(data); setCancelDone(true); }
+      else alert(data.error ?? "Errore nel rimborso. Riprova.");
+    } finally { setRefunding(false); }
   };
 
   const handleDowngrade = async (priceId: string, planName: string) => {
@@ -118,9 +137,7 @@ export default function SubscriptionManager({
       const data = await res.json();
       if (res.ok) setDowngradedPlan(planName.toLowerCase());
       else alert(data.error ?? "Errore nel downgrade. Riprova.");
-    } finally {
-      setDowngrading(null);
-    }
+    } finally { setDowngrading(null); }
   };
 
   const handleRestore = async () => {
@@ -128,15 +145,9 @@ export default function SubscriptionManager({
     setRestoring(true);
     try {
       const res = await fetch("/api/subscription/restore", { method: "POST" });
-      if (res.ok) {
-        window.location.reload();
-      } else {
-        const data = await res.json();
-        alert(data.error ?? "Errore nel ripristino. Riprova.");
-      }
-    } finally {
-      setRestoring(false);
-    }
+      if (res.ok) window.location.reload();
+      else { const data = await res.json(); alert(data.error ?? "Errore nel ripristino. Riprova."); }
+    } finally { setRestoring(false); }
   };
 
   const handleCancel = async () => {
@@ -146,125 +157,145 @@ export default function SubscriptionManager({
       const res = await fetch("/api/subscription/cancel", { method: "POST" });
       if (res.ok) setCancelDone(true);
       else alert("Errore nella cancellazione. Riprova.");
-    } finally {
-      setCancelling(false);
-    }
+    } finally { setCancelling(false); }
   };
+
+  const fmt = (d: string) =>
+    new Date(d).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 
   const otherPlans = PLANS.filter((p) => p.name.toLowerCase() !== plan);
 
   return (
-    <div className="flex flex-col gap-8 max-w-lg">
-      {/* Piano attuale */}
-      <div className="p-0.5 rounded-2xl bg-linear-to-b from-[#4B4D4F] to-[#4B4D4F33]">
-        <div className="bg-linear-to-b from-[#1A1C20] to-[#08090D] rounded-2xl flex flex-col gap-8 p-8">
+    <div className="flex flex-col gap-5 max-w-lg">
 
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-indigo-400 text-sm">Piano attuale</span>
-              <span className="text-indigo-100 text-2xl font-bold">{PLAN_LABELS[plan] ?? plan}</span>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_COLORS[plan] ?? "bg-slate-900 text-indigo-400"}`}>
-                Attivo
+      {/* ── Piano attuale ── */}
+      <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden">
+
+        {/* Header strip */}
+        <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+              Piano attuale
+            </p>
+            <p className="font-display text-2xl font-bold text-fg leading-none">
+              {PLAN_LABELS[plan] ?? plan}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", accent.badge)}>
+              {cancelDone && !refundResult ? "Cancellazione schedulata" : "Attivo"}
+            </span>
+            {downgradedPlan && downgradedPlan !== "cancelled" && (
+              <span className="text-[10px] text-orange-300 font-medium">
+                → {PLAN_LABELS[downgradedPlan] ?? downgradedPlan} al rinnovo
               </span>
-              {cancelDone && !refundResult && (
-                <span className="text-xs text-red-400 font-medium">Cancellazione schedulata</span>
-              )}
-              {downgradedPlan && downgradedPlan !== "cancelled" && (
-                <span className="text-xs text-yellow-400 font-medium">
-                  Passa a {PLAN_LABELS[downgradedPlan] ?? downgradedPlan} al rinnovo
+            )}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
+
+        {/* Credits block */}
+        <div className="px-6 py-5 flex flex-col gap-4">
+          {/* Numbers row */}
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold">
+                Crediti rimanenti
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-3xl font-bold text-fg tabular-nums">
+                  {planCreditsRemaining}
                 </span>
-              )}
+                <span className="text-[rgba(240,237,230,0.35)] text-sm">/ {planCredits}</span>
+                {extraCredits > 0 && (
+                  <span className="text-accent text-xs font-semibold ml-1">+{extraCredits} extra</span>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold block">
+                Minuti
+              </span>
+              <span className={cn("font-display text-3xl font-bold tabular-nums", isLow ? "text-red-400" : "text-fg")}>
+                ~{remainingMinutes}
+              </span>
             </div>
           </div>
 
-          {/* Credits */}
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-baseline">
-              <span className="text-indigo-400 text-sm">Credits piano</span>
-              <span className="text-indigo-100 font-semibold tabular-nums">
-                {planCreditsRemaining}{" "}
-                <span className="text-indigo-400 font-normal text-sm">/ {planCredits}</span>
-              </span>
-            </div>
-            <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+          {/* Progress bar */}
+          <div className="flex flex-col gap-1.5">
+            <div className="w-full h-1.5 bg-[rgba(240,237,230,0.06)] rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${isLow ? "bg-red-400" : "bg-violet-300"}`}
+                className={cn(
+                  "h-full rounded-full transition-all duration-700",
+                  isLow ? "bg-red-400" : "bg-accent"
+                )}
                 style={{ width: `${100 - usagePercent}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-indigo-400">
-              <span className={isLow ? "text-red-400 font-medium" : ""}>
-                ~{remainingMinutes} min rimanenti
-              </span>
-              {extraCredits > 0 ? (
-                <span className="text-violet-400 font-medium">+{extraCredits} extra</span>
-              ) : (
-                <span>{planCreditsRemaining} credits</span>
-              )}
+            <div className="flex justify-between text-[11px] text-[rgba(240,237,230,0.35)]">
+              <span>{usagePercent}% utilizzato</span>
+              <span className={isLow ? "text-red-400 font-medium" : ""}>{isLow ? "Crediti in esaurimento" : `${100 - usagePercent}% disponibile`}</span>
             </div>
           </div>
 
-          {/* Rinnovo */}
+          {/* Renewal / status */}
           {renewalInfo && !refundResult && (() => {
             const sc = renewalInfo.scheduledChange;
-            const fmt = (d: string) =>
-              new Date(d).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
-            if (sc?.action === "cancel") {
-              return (
-                <span className="text-xs text-red-400">
-                  Attivo fino al {fmt(sc.effectiveAt)}
-                </span>
-              );
-            }
-            if (renewalInfo.nextBilledAt) {
-              return (
-                <span className="text-xs text-indigo-400">
-                  Rinnovo il {fmt(renewalInfo.nextBilledAt)}
-                  {renewalInfo.price && <> · {renewalInfo.price}/mese</>}
-                </span>
-              );
-            }
+            if (sc?.action === "cancel") return (
+              <p className="text-xs text-red-400 bg-red-400/8 rounded-lg px-3 py-2">
+                Attivo fino al {fmt(sc.effectiveAt)}
+              </p>
+            );
+            if (renewalInfo.nextBilledAt) return (
+              <p className="text-xs text-[rgba(240,237,230,0.4)]">
+                Rinnovo il{" "}
+                <span className="text-fg font-medium">{fmt(renewalInfo.nextBilledAt)}</span>
+                {renewalInfo.price && <> · {renewalInfo.price}/mese</>}
+              </p>
+            );
             return null;
           })()}
 
-          {/* Rimborso */}
           {refundResult && (
-            <span className="text-xs text-green-400 font-medium">
+            <p className="text-xs text-accent font-medium">
               {refundResult.previousPlan
                 ? `Rimborso elaborato · piano ridotto a ${PLAN_LABELS[refundResult.previousPlan] ?? refundResult.previousPlan}`
                 : "Rimborso elaborato · abbonamento cancellato"}
-            </span>
+            </p>
           )}
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
+
+        {/* Actions footer */}
+        <div className="px-6 py-4 flex flex-wrap gap-x-4 gap-y-2">
           {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && credits >= planCredits && (
             <button
               onClick={handleRefund}
               disabled={refunding}
-              className="text-xs text-indigo-400 hover:text-green-400 transition-colors text-left disabled:opacity-50"
+              className="text-xs text-[rgba(240,237,230,0.4)] hover:text-accent transition-colors disabled:opacity-40"
             >
               {refunding ? "Rimborso in corso…" : "Richiedi rimborso"}
             </button>
           )}
-
-          {/* Cancellazione */}
           {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && (
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className="text-xs text-indigo-400 hover:text-red-400 transition-colors text-left disabled:opacity-50"
+              className="text-xs text-[rgba(240,237,230,0.4)] hover:text-red-400 transition-colors disabled:opacity-40"
             >
               {cancelling ? "Cancellazione in corso…" : "Cancella abbonamento"}
             </button>
           )}
-
-          {/* Ripristino */}
           {(cancelDone || downgradedPlan) && !refundResult && paddleSubscriptionId && (
             <button
               onClick={handleRestore}
               disabled={restoring}
-              className="text-xs text-indigo-400 hover:text-violet-400 transition-colors text-left disabled:opacity-50"
+              className="text-xs text-[rgba(240,237,230,0.4)] hover:text-fg transition-colors disabled:opacity-40"
             >
               {restoring ? "Ripristino in corso…" : "Ripristina abbonamento"}
             </button>
@@ -272,39 +303,48 @@ export default function SubscriptionManager({
         </div>
       </div>
 
-      {/* Cambia piano */}
+      {/* ── Cambia piano ── */}
       {otherPlans.length > 0 && (
         <div className="flex flex-col gap-3">
-          <span className="text-indigo-400 text-sm">Cambia piano</span>
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+            Cambia piano
+          </p>
           <div className="flex flex-col gap-2">
             {otherPlans.map((p) => {
               const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
               const isThisDowngrading = downgrading === p.priceId;
               const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
+              const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
               return (
                 <button
                   key={p.priceId}
-                  onClick={() =>
-                    isUpgrade
-                      ? handleCheckout(p.priceId)
-                      : handleDowngrade(p.priceId, p.name)
-                  }
+                  onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
                   disabled={isThisDowngrading || isScheduled}
-                  className="flex items-center justify-between p-4 rounded-xl bg-[#1A1C20] border border-[#4B4D4F33] hover:border-[#4B4D4F] transition-colors text-left disabled:opacity-60 disabled:cursor-default"
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-xl text-left transition-all duration-200",
+                    "bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)]",
+                    "hover:ring-[rgba(240,237,230,0.14)] hover:bg-[#141418]",
+                    "disabled:opacity-50 disabled:cursor-default"
+                  )}
                 >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-indigo-100 font-semibold">{p.name}</span>
-                    <span className="text-indigo-400 text-xs">{p.credits} crediti/mese · {p.price}</span>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("size-2 rounded-full shrink-0", pa.dot)} />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-fg font-semibold text-sm">{p.name}</span>
+                      <span className="text-[rgba(240,237,230,0.4)] text-xs">
+                        {p.credits} crediti/mese · {p.price}
+                      </span>
+                    </div>
                   </div>
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    isScheduled
-                      ? "bg-yellow-400/20 text-yellow-400"
-                      : isUpgrade
-                      ? "bg-violet-300/20 text-violet-300"
-                      : "bg-slate-800 text-indigo-400"
-                  }`}>
-                    {isThisDowngrading ? "…" : isScheduled ? "Schedulato" : isUpgrade ? "Upgrade" : "Downgrade"}
-                  </span>
+                  {isScheduled ? (
+                    <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-400/15 text-orange-300">
+                      Schedulato
+                    </span>
+                  ) : (
+                    <span className="text-[rgba(240,237,230,0.3)] text-xs">
+                      {isThisDowngrading ? "…" : "Seleziona →"}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -312,28 +352,59 @@ export default function SubscriptionManager({
         </div>
       )}
 
-      {/* Storico pagamenti */}
+      {/* ── Storico pagamenti (toggle) ── */}
       {transactions.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <span className="text-indigo-400 text-sm">Storico pagamenti</span>
-          <div className="flex flex-col gap-2">
-            {transactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-[#1A1C20] border border-[#4B4D4F33]"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-indigo-100 text-sm font-medium">
-                    {new Date(tx.createdAt).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
-                  </span>
-                  <span className="text-indigo-400 text-xs capitalize">{tx.status}</span>
-                </div>
-                <span className="text-indigo-100 font-semibold tabular-nums">
-                  {tx.currency} {tx.amount}
-                </span>
+        <div className="flex flex-col gap-0">
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className={cn(
+              "flex items-center justify-between w-full px-5 py-4 rounded-2xl",
+              "bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)]",
+              "hover:ring-[rgba(240,237,230,0.12)] transition-all duration-200 text-left",
+              showHistory && "rounded-b-none ring-b-0"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="10" rx="2" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" />
+                <path d="M5 7h6M5 10h4" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              <span className="text-[rgba(240,237,230,0.6)] text-sm font-medium">
+                Storico pagamenti
+              </span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(240,237,230,0.07)] text-[rgba(240,237,230,0.4)]">
+                {transactions.length}
+              </span>
+            </div>
+            <span className="text-[rgba(240,237,230,0.35)]">
+              <ChevronDown open={showHistory} />
+            </span>
+          </button>
+
+          {showHistory && (
+            <div className="bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)] ring-t-0 rounded-b-2xl overflow-hidden">
+              <div className="h-px bg-[rgba(240,237,230,0.06)]" />
+              <div className="flex flex-col divide-y divide-[rgba(240,237,230,0.05)]">
+                {transactions.map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between px-5 py-3.5">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-fg text-sm font-medium">
+                        {new Date(tx.createdAt).toLocaleDateString("it-IT", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="text-[rgba(240,237,230,0.35)] text-xs capitalize">{tx.status}</span>
+                    </div>
+                    <span className="text-fg font-semibold text-sm tabular-nums">
+                      {tx.currency} {tx.amount}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
