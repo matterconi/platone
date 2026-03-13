@@ -36,11 +36,8 @@ const InterviewCard = ({
   techstack,
   createdAt,
 }: InterviewCardProps) => {
-  const style = TYPE_STYLES[type?.toLowerCase()] ?? {
-    gradient: "from-[#1a1a20] to-[#0f0f13]",
-    badge: "bg-white/[0.07] text-[rgba(240,237,230,0.55)]",
-    label: type ?? "—",
-  };
+  const typeKey = type?.toLowerCase() ?? "";
+  const style = TYPE_STYLES[typeKey] ?? null;
 
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString("it-IT", {
@@ -62,19 +59,26 @@ const InterviewCard = ({
       )}
     >
       {/* Gradient header */}
-      <div className={cn("bg-linear-to-br px-5 pt-5 pb-4 flex flex-col gap-2 min-h-22", style.gradient)}>
+      <div
+        className={cn(
+          "bg-linear-to-br px-5 pt-5 pb-4 flex flex-col gap-2 min-h-22",
+          style?.gradient ?? "from-[#1a1a20] to-[#0f0f13]"
+        )}
+      >
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-fg font-semibold text-base leading-snug line-clamp-2 flex-1">
-            {role ?? "—"}
+            {role ?? "Intervista"}
           </h3>
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider mt-0.5",
-              style.badge
-            )}
-          >
-            {style.label}
-          </span>
+          {style && (
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider mt-0.5",
+                style.badge
+              )}
+            >
+              {style.label}
+            </span>
+          )}
         </div>
       </div>
 

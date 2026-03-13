@@ -182,7 +182,7 @@ export default function Interviews() {
           <SelectField
             value={type}
             onChange={(v) => { setType(v); setOffset(0); }}
-            placeholder="Tutti i tipi"
+            placeholder="Tipo di colloquio"
             options={filterOptions.types}
           />
         )}
@@ -191,7 +191,7 @@ export default function Interviews() {
           <SelectField
             value={specialization}
             onChange={(v) => { setSpecialization(v); setOffset(0); }}
-            placeholder="Tutte le aree"
+            placeholder="Settore / area"
             options={filterOptions.specializations}
           />
         )}
@@ -200,7 +200,7 @@ export default function Interviews() {
           <SelectField
             value={tech}
             onChange={(v) => { setTech(v); setOffset(0); }}
-            placeholder="Tutti i tech"
+            placeholder="Tecnologia"
             options={filterOptions.techs}
           />
         )}

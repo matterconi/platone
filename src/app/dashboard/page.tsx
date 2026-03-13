@@ -139,18 +139,9 @@ export default async function DashboardPage() {
       {/* Page header */}
       <div className="border-b border-[rgba(240,237,230,0.07)]">
         <div className="max-w-5xl mx-auto px-6 py-10">
-          <div className="flex items-center gap-3 mb-3">
-            <p className="text-[11px] font-semibold tracking-widest uppercase text-accent shrink-0">
-              Dashboard
-            </p>
-            <div className="h-px flex-1 bg-accent/20" />
-          </div>
           <h1 className="font-display text-4xl font-bold text-fg">
             {firstName ? `Ciao, ${firstName} 👋` : "La tua area personale"}
           </h1>
-          <p className="text-[rgba(240,237,230,0.45)] text-sm mt-2">
-            Monitora le tue performance, gestisci le interviste e il tuo profilo.
-          </p>
         </div>
       </div>
 
@@ -158,13 +149,8 @@ export default async function DashboardPage() {
 
         {/* Stats overview */}
         <AnimatedSection className="flex flex-col gap-6" delay={0}>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-3">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-accent shrink-0">Panoramica</p>
-              <div className="h-px flex-1 bg-accent/20" />
-            </div>
-            <h2 className="font-display text-3xl font-bold text-fg">Le tue performance</h2>
-            <p className="text-[rgba(240,237,230,0.45)] text-sm">Punteggi medi, distribuzione delle competenze e statistiche di utilizzo.</p>
+          <div>
+            <h2 className="font-display text-2xl font-bold text-fg">Performance</h2>
           </div>
           <DashboardStats
             performancePoints={performancePoints}
@@ -181,47 +167,26 @@ export default async function DashboardPage() {
           />
         </AnimatedSection>
 
-        <div className="h-px bg-[rgba(240,237,230,0.07)]" />
-
         {/* Interviste */}
         <AnimatedSection className="flex flex-col gap-6" delay={0}>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-3">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-accent shrink-0">Storico</p>
-              <div className="h-px flex-1 bg-accent/20" />
-            </div>
-            <h2 className="font-display text-3xl font-bold text-fg">Le tue interviste</h2>
-            <p className="text-[rgba(240,237,230,0.45)] text-sm">Tutte le sessioni completate con il tuo AI voice coach.</p>
+          <div>
+            <h2 className="font-display text-2xl font-bold text-fg">Le tue interviste</h2>
           </div>
           <Interviews />
         </AnimatedSection>
 
-        <div className="h-px bg-[rgba(240,237,230,0.07)]" />
-
         {/* Profilo CV */}
         <AnimatedSection className="flex flex-col gap-6" delay={0.05}>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-3">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-accent shrink-0">Profilo</p>
-              <div className="h-px flex-1 bg-accent/20" />
-            </div>
-            <h2 className="font-display text-3xl font-bold text-fg">Il tuo curriculum</h2>
-            <p className="text-[rgba(240,237,230,0.45)] text-sm">Carica il tuo CV per personalizzare le sessioni di pratica.</p>
+          <div>
+            <h2 className="font-display text-2xl font-bold text-fg">Curriculum</h2>
           </div>
           <CvSection initialFilename={cvFilename} />
         </AnimatedSection>
 
-        <div className="h-px bg-[rgba(240,237,230,0.07)]" />
-
         {/* Piano */}
         <AnimatedSection className="flex flex-col gap-6" delay={0.1}>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-3">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-accent shrink-0">Abbonamento</p>
-              <div className="h-px flex-1 bg-accent/20" />
-            </div>
-            <h2 className="font-display text-3xl font-bold text-fg">Il tuo piano</h2>
-            <p className="text-[rgba(240,237,230,0.45)] text-sm">Gestisci crediti, rinnovi e cambi di piano.</p>
+          <div>
+            <h2 className="font-display text-2xl font-bold text-fg">Il tuo piano</h2>
           </div>
 
           {access.hasActiveSubscription && access.plan ? (
