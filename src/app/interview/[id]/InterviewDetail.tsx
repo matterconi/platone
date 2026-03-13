@@ -162,7 +162,7 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
 
             <div className="h-px bg-white/6" />
 
-            {ev.strengths.length > 0 && (
+            {ev.strengths?.length > 0 && (
               <div className="flex flex-col gap-2">
                 <p className="text-indigo-400 text-xs uppercase tracking-widest">Punti di forza</p>
                 <ul className="flex flex-col gap-1.5">
@@ -176,7 +176,7 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
               </div>
             )}
 
-            {ev.weaknesses.length > 0 && (
+            {ev.weaknesses?.length > 0 && (
               <div className="flex flex-col gap-2">
                 <p className="text-indigo-400 text-xs uppercase tracking-widest">Aree di miglioramento</p>
                 <ul className="flex flex-col gap-1.5">
@@ -190,7 +190,7 @@ const InterviewDetail = ({ interview, userName, userId }: Props) => {
               </div>
             )}
 
-            {ev.improvementPlan.length > 0 && (
+            {ev.improvementPlan?.length > 0 && (
               <div className="flex flex-col gap-2">
                 <p className="text-indigo-400 text-xs uppercase tracking-widest">Piano di miglioramento</p>
                 <ul className="flex flex-col gap-1.5">
