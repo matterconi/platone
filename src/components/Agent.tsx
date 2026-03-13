@@ -759,7 +759,7 @@ const Agent = ({
                     className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
                     style={{ background: "rgba(184,255,0,0.05)", border: "1px solid rgba(184,255,0,0.15)" }}
                   >
-                    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" style={{ color: "rgba(184,255,0,0.55)", shrink: 0 }}>
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" style={{ color: "rgba(184,255,0,0.55)", flexShrink: 0 }}>
                       <path d="M4 2h5l3 3v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M9 2v3h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>

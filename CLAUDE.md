@@ -124,6 +124,59 @@ npm run test:coverage
 
 ---
 
+## Frontend Tasks — Skill obbligatoria
+
+Whenever the user asks to **create, redesign, or add** a UI component, section, or page, you MUST invoke the `frontend-design` skill BEFORE writing any code. This is a hard requirement — do not skip it.
+
+Trigger phrases: "crea un componente", "aggiungi una sezione", "redesigna", "fai il frontend di", "crea la UI per", "nuova pagina", "nuovo componente".
+
+After the skill completes, ensure the output respects the design system below.
+
+---
+
+## Frontend Design System
+
+### Colors (CSS variables — `src/app/globals.css`)
+- `--accent`: `#b8ff00` (lime) — brand color, CTAs, glows, highlights → Tailwind: `text-accent`, `bg-accent`
+- `--accent` hover: `#ccff22`
+- `--fg`: `#f0ede6` (off-white) — main text → Tailwind: `text-fg`
+- `--muted`: `rgba(240, 237, 230, 0.45)` — secondary text
+- `--border` / `--border-bright`: `rgba(240,237,230, 0.07/0.14)`
+- Background: `#07070a` (base), `#0f0f13` (cards) — **hardcoded, not via var**
+- **Dark-first design** — no light mode
+- **ALWAYS** use canonical Tailwind 4 classes: `text-accent` not `text-[#b8ff00]`, `text-fg` not `text-[#f0ede6]`, `bg-linear-to-b` not `bg-gradient-to-b`, `m-px` not `m-[1px]`
+
+### Typography
+- Headlines: **Syne** (`font-display`), weights 700–800, `letter-spacing: -0.025em`
+- Body: **Plus Jakarta Sans**, weights 300–800
+- Hero: `text-6xl sm:text-7xl`, `leading-[0.93]`
+- Section titles: `text-4xl md:text-5xl`
+- Labels/micro: `text-xs` / `text-[11px]`
+
+### Layout
+- Container: `max-w-5xl`, horizontal padding `px-6`
+- Sections: `py-10 md:py-20`
+- Breakpoints: mobile-first → `sm:640` `md:768` `lg:1024`
+
+### Animations
+- **Framer Motion** standard `fadeUp` variant: `{ opacity:0, y:24, filter:"blur(6px)" }` → visible; easing `[0.22,1,0.36,1]`
+- Use `whileInView` + stagger children via container variant
+- Wrap sections in `FadeInView` component
+- CSS keyframes: marquee (`38s/42s linear`), waveform `scaleY`, pulse dot `2.4s`
+
+### Component conventions
+- Always use `cn()` from `@/lib/utils` for conditional Tailwind classes — never raw string concatenation
+- No inline `style` objects when Tailwind handles it
+- Cards: bg `#0f0f13`, gradient border + box-shadow glow on hover
+- Primary buttons: lime bg, dark text, hover → `#ccff22`
+- Dynamic agent colors via `--agent-color` CSS variable
+- Marquee sections: mask gradient on edges, pause on hover
+
+### UI libraries
+- Shadcn (`src/components/ui/`), Icons: Lucide, Carousel: Swiper, Toasts: Sonner, Charts: Recharts, Primitives: Radix UI
+
+---
+
 ## Conventions
 
 - Use Italian for user-facing text (UI labels, error messages shown to users)
