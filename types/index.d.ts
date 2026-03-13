@@ -63,7 +63,10 @@ interface InterviewCardProps {
   userId?: string;
   role: string;
   type: string;
+  level?: string;
+  specialization?: string;
   techstack?: string[] | null;
+  questionsCount?: number;
   createdAt?: string;
 }
 

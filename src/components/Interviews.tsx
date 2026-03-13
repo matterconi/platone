@@ -92,7 +92,6 @@ export default function Interviews() {
   const [role, setRole] = useState("");
   const [type, setType] = useState("");
   const [specialization, setSpecialization] = useState("");
-  const [tech, setTech] = useState("");
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
@@ -122,7 +121,6 @@ export default function Interviews() {
     if (role) params.set("role", role);
     if (type) params.set("type", type);
     if (specialization) params.set("specialization", specialization);
-    if (tech) params.set("techstack", tech);
     params.set("limit", String(PAGE_SIZE));
     params.set("offset", String(offset));
 
@@ -147,7 +145,7 @@ export default function Interviews() {
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [role, type, specialization, tech, offset]);
+  }, [role, type, specialization, offset]);
 
   useEffect(() => {
     fetchInterviews();
@@ -158,11 +156,10 @@ export default function Interviews() {
     setRole("");
     setType("");
     setSpecialization("");
-    setTech("");
     setOffset(0);
   };
 
-  const activeCount = [role, type, specialization, tech].filter(Boolean).length;
+  const activeCount = [role, type, specialization].filter(Boolean).length;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE);
 
@@ -193,15 +190,6 @@ export default function Interviews() {
             onChange={(v) => { setSpecialization(v); setOffset(0); }}
             placeholder="Settore / area"
             options={filterOptions.specializations}
-          />
-        )}
-
-        {filterOptions.techs.length > 0 && (
-          <SelectField
-            value={tech}
-            onChange={(v) => { setTech(v); setOffset(0); }}
-            placeholder="Tecnologia"
-            options={filterOptions.techs}
           />
         )}
 
@@ -261,7 +249,10 @@ export default function Interviews() {
               userId={interview.userId}
               role={interview.role}
               type={interview.type}
+              level={interview.level}
+              specialization={interview.specialization}
               techstack={interview.techstack}
+              questionsCount={interview.questions?.length}
               createdAt={interview.createdAt}
             />
           ))}

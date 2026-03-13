@@ -328,21 +328,14 @@ export default function SubscriptionManager({
           <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
             Cambia piano
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="bg-[#0f0f13] rounded-xl ring-1 ring-[rgba(240,237,230,0.07)] divide-y divide-[rgba(240,237,230,0.06)]">
             {otherPlans.map((p) => {
               const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
               const isThisDowngrading = downgrading === p.priceId;
               const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
               const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
               return (
-                <div
-                  key={p.priceId}
-                  className={cn(
-                    "flex flex-col gap-3 p-4 rounded-xl",
-                    "bg-[#0f0f13] ring-1 ring-[rgba(240,237,230,0.07)]",
-                    isUpgrade && "ring-accent/20"
-                  )}
-                >
+                <div key={p.priceId} className="p-4 flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <span className={cn("size-2 rounded-full shrink-0", pa.dot)} />
                     <div className="flex flex-col gap-0.5 flex-1">
@@ -372,7 +365,7 @@ export default function SubscriptionManager({
                         "disabled:opacity-40 disabled:cursor-default"
                       )}
                     >
-                      {isThisDowngrading ? "…" : isUpgrade ? `Passa a ${p.name}` : `Passa a ${p.name}`}
+                      {isThisDowngrading ? "…" : `Passa a ${p.name}`}
                     </button>
                   )}
                 </div>

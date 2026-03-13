@@ -19,6 +19,18 @@ const TYPE_STYLES: Record<string, { gradient: string; badge: string; label: stri
   },
 };
 
+const LEVEL_STYLES: Record<string, string> = {
+  junior: "bg-sky-400/10 text-sky-300",
+  mid: "bg-violet-400/10 text-violet-300",
+  senior: "bg-amber-400/10 text-amber-300",
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  junior: "Junior",
+  mid: "Mid",
+  senior: "Senior",
+};
+
 function CalendarIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
@@ -29,15 +41,31 @@ function CalendarIcon() {
   );
 }
 
+function QuestionIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+      <circle cx="6" cy="6" r="5" stroke="rgba(240,237,230,0.35)" strokeWidth="1" />
+      <path d="M4.5 4.5a1.5 1.5 0 0 1 3 0c0 .833-1.5 1.25-1.5 2.25" stroke="rgba(240,237,230,0.35)" strokeWidth="1" strokeLinecap="round" />
+      <circle cx="6" cy="9" r="0.6" fill="rgba(240,237,230,0.35)" />
+    </svg>
+  );
+}
+
 const InterviewCard = ({
   interviewId,
   role,
   type,
+  level,
+  specialization,
   techstack,
+  questionsCount,
   createdAt,
 }: InterviewCardProps) => {
   const typeKey = type?.toLowerCase() ?? "";
+  const levelKey = level?.toLowerCase() ?? "";
   const style = TYPE_STYLES[typeKey] ?? null;
+  const levelStyle = LEVEL_STYLES[levelKey] ?? null;
+  const levelLabel = LEVEL_LABELS[levelKey] ?? level;
 
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString("it-IT", {
@@ -47,43 +75,62 @@ const InterviewCard = ({
       })
     : null;
 
-  const visibleTech = (techstack ?? []).slice(0, 4);
-  const overflow = (techstack ?? []).length - 4;
+  const visibleTech = (techstack ?? []).slice(0, 3);
+  const overflow = (techstack ?? []).length - 3;
 
   return (
     <div
       className={cn(
         "rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] bg-[#0f0f13] overflow-hidden",
-        "hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_24px_rgba(184,255,0,0.05)]",
+        "hover:ring-[rgba(184,255,0,0.18)] hover:shadow-[0_0_28px_rgba(184,255,0,0.06)]",
         "transition-all duration-300 group flex flex-col"
       )}
     >
       {/* Gradient header */}
       <div
         className={cn(
-          "bg-linear-to-br px-5 pt-5 pb-4 flex flex-col gap-2 min-h-22",
+          "bg-linear-to-br px-5 pt-5 pb-4 flex flex-col gap-2",
           style?.gradient ?? "from-[#1a1a20] to-[#0f0f13]"
         )}
       >
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-fg font-semibold text-base leading-snug line-clamp-2 flex-1">
-            {role ?? "Intervista"}
-          </h3>
+        {/* Badges row */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           {style && (
             <span
               className={cn(
-                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider mt-0.5",
+                "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
                 style.badge
               )}
             >
               {style.label}
             </span>
           )}
+          {levelStyle && levelLabel && (
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                levelStyle
+              )}
+            >
+              {levelLabel}
+            </span>
+          )}
         </div>
+
+        {/* Role title */}
+        <h3 className="text-fg font-semibold text-base leading-snug line-clamp-2">
+          {role ?? "Intervista"}
+        </h3>
+
+        {specialization && (
+          <span className="text-[rgba(240,237,230,0.45)] text-xs font-medium truncate">
+            {specialization}
+          </span>
+        )}
       </div>
 
       {/* Body */}
-      <div className="p-5 flex flex-col gap-4 flex-1">
+      <div className="p-5 flex flex-col gap-3 flex-1">
         {/* Tech tags */}
         {visibleTech.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
@@ -102,16 +149,26 @@ const InterviewCard = ({
             )}
           </div>
         ) : (
-          <div className="h-5" />
+          <div className="h-1" />
         )}
 
-        {/* Date */}
-        {formattedDate && (
-          <div className="flex items-center gap-1.5 mt-auto">
-            <CalendarIcon />
-            <span className="text-[rgba(240,237,230,0.35)] text-xs">{formattedDate}</span>
-          </div>
-        )}
+        {/* Meta row */}
+        <div className="flex items-center justify-between gap-2 mt-auto">
+          {questionsCount != null && questionsCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              <QuestionIcon />
+              <span className="text-[rgba(240,237,230,0.35)] text-xs">
+                {questionsCount} {questionsCount === 1 ? "domanda" : "domande"}
+              </span>
+            </div>
+          )}
+          {formattedDate && (
+            <div className={cn("flex items-center gap-1.5", !(questionsCount && questionsCount > 0) && "ml-auto")}>
+              <CalendarIcon />
+              <span className="text-[rgba(240,237,230,0.35)] text-xs">{formattedDate}</span>
+            </div>
+          )}
+        </div>
 
         {/* CTA */}
         <Link
