@@ -186,14 +186,10 @@ export default function DashboardStats({
         variants={cardVariants}
         className="col-span-2 lg:col-span-3 group relative bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-5 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_32px_rgba(184,255,0,0.05)] transition-all duration-300"
       >
-        {/* Section label + score */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">01</span>
-            <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
-              Performance
-            </span>
-          </div>
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)] mb-1">
+            Performance nel tempo
+          </p>
           <div className="flex items-baseline gap-2">
             <span className="font-display text-5xl font-bold leading-none text-accent">
               {overallAvg !== null ? overallAvg.toFixed(1) : "—"}

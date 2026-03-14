@@ -8,6 +8,7 @@ import { PLAN_CREDITS } from "@/lib/credits";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import Interviews from "@/components/Interviews";
 import CvSection from "@/components/CvSection";
+import PaymentHistory from "@/components/PaymentHistory";
 import AnimatedSection from "@/components/AnimatedSection";
 import DashboardStats from "@/components/DashboardStats";
 import sql from "@/lib/db";
@@ -175,22 +176,8 @@ export default async function DashboardPage() {
           />
         </AnimatedSection>
 
-        {/* ── Section 2: Interviews — subtle integrated label ── */}
+        {/* ── Section 2: Interviews ── */}
         <AnimatedSection className="flex flex-col gap-5" delay={0}>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">02</span>
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
-                Le tue interviste
-              </span>
-            </div>
-            <Link
-              href="/interview/new"
-              className="shrink-0 sm:hidden inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-accent/10 border border-accent/25 hover:border-accent/50 text-accent text-xs font-semibold transition-all duration-200"
-            >
-              + Nuova
-            </Link>
-          </div>
           <Interviews />
         </AnimatedSection>
 
@@ -201,14 +188,6 @@ export default async function DashboardPage() {
         >
           {/* Profilo card */}
           <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-5">
-            {/* Section label */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">03</span>
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
-                Profilo
-              </span>
-            </div>
-
             {/* User info */}
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">
@@ -226,8 +205,11 @@ export default async function DashboardPage() {
 
             <div className="h-px bg-[rgba(240,237,230,0.06)]" />
 
-            {/* CV section embedded */}
+            {/* CV section */}
             <CvSection initialFilename={cvFilename} />
+
+            {/* Storico pagamenti */}
+            <PaymentHistory transactions={transactions} />
           </div>
 
           {/* Piano card */}
@@ -239,17 +221,10 @@ export default async function DashboardPage() {
               paddleSubscriptionId={access.paddleSubscriptionId}
               userEmail={userEmail}
               userId={userId}
-              transactions={transactions}
               renewalInfo={renewalInfo}
             />
           ) : (
             <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col">
-              <div className="flex items-center gap-2 mb-6">
-                <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">04</span>
-                <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
-                  Il tuo piano
-                </span>
-              </div>
               <div className="flex flex-col gap-4 flex-1 justify-center">
                 <p className="font-display text-lg font-semibold text-fg">
                   Nessun piano attivo
