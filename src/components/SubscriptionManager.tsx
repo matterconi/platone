@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
-import { PLAN_CREDITS, DEFAULT_CREDITS_PER_MINUTE } from "@/lib/credits";
+import { PLAN_CREDITS } from "@/lib/credits";
 import { cn } from "@/lib/utils";
 
 const PLANS = [
@@ -47,19 +47,10 @@ type Props = {
 function ChevronDown({ open }: { open: boolean }) {
   return (
     <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
+      width="16" height="16" viewBox="0 0 16 16" fill="none"
       className={cn("transition-transform duration-200", open && "rotate-180")}
     >
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -87,13 +78,6 @@ export default function SubscriptionManager({
   const [showHistory, setShowHistory] = useState(false);
 
   const planCredits = PLAN_CREDITS[plan] ?? 0;
-  const extraCredits = Math.max(0, credits - planCredits);
-  const planCreditsRemaining = Math.min(credits, planCredits);
-  const remainingMinutes = Math.floor(credits / DEFAULT_CREDITS_PER_MINUTE);
-  const usagePercent = planCredits > 0
-    ? Math.min(100, Math.round(((planCredits - planCreditsRemaining) / planCredits) * 100))
-    : 0;
-  const isLow = usagePercent >= 80;
   const accent = PLAN_ACCENT[plan] ?? PLAN_ACCENT.casual;
 
   useEffect(() => {
@@ -166,270 +150,208 @@ export default function SubscriptionManager({
   const otherPlans = PLANS.filter((p) => p.name.toLowerCase() !== plan);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl items-start">
+    <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden flex flex-col h-full">
 
-      {/* ── Piano attuale ── */}
-      <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden">
-
-        {/* Header */}
-        <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
-              Piano attuale
-            </p>
-            <p className="font-display text-2xl font-bold text-fg leading-none">
-              {PLAN_LABELS[plan] ?? plan}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", accent.badge)}>
-              {cancelDone && !refundResult ? "Cancellazione schedulata" : "Attivo"}
-            </span>
-            {downgradedPlan && downgradedPlan !== "cancelled" && (
-              <span className="text-[10px] text-orange-300 font-medium">
-                → {PLAN_LABELS[downgradedPlan] ?? downgradedPlan} al rinnovo
-              </span>
-            )}
-          </div>
+      {/* Section label */}
+      <div className="px-6 pt-6 pb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">04</span>
+          <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+            Il tuo piano
+          </span>
         </div>
+      </div>
 
-        <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
-
-        {/* Credits block */}
-        <div className="px-6 py-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold">
-                Crediti rimanenti
-              </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-3xl font-bold text-fg tabular-nums">
-                  {planCreditsRemaining}
-                </span>
-                <span className="text-[rgba(240,237,230,0.35)] text-sm">/ {planCredits}</span>
-                {extraCredits > 0 && (
-                  <span className="text-accent text-xs font-semibold ml-1">+{extraCredits} extra</span>
-                )}
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold block">
-                Minuti
-              </span>
-              <span className={cn("font-display text-3xl font-bold tabular-nums", isLow ? "text-red-400" : "text-fg")}>
-                ~{remainingMinutes}
-              </span>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="flex flex-col gap-1.5">
-            <div className="w-full h-1.5 bg-[rgba(240,237,230,0.06)] rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-700",
-                  isLow ? "bg-red-400" : "bg-accent"
-                )}
-                style={{ width: `${100 - usagePercent}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] text-[rgba(240,237,230,0.35)]">
-              <span>{usagePercent}% utilizzato</span>
-              <span className={isLow ? "text-red-400 font-medium" : ""}>
-                {isLow ? "Crediti in esaurimento" : `${100 - usagePercent}% disponibile`}
-              </span>
-            </div>
-          </div>
-
-          {/* Renewal / status */}
-          {renewalInfo && !refundResult && (() => {
-            const sc = renewalInfo.scheduledChange;
-            if (sc?.action === "cancel") return (
-              <p className="text-xs text-red-400 bg-red-400/8 rounded-lg px-3 py-2">
-                Attivo fino al {fmt(sc.effectiveAt)}
-              </p>
-            );
-            if (renewalInfo.nextBilledAt) return (
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold">
-                  Rinnovo il
-                </span>
-                <span className="text-fg text-sm font-medium">
-                  {fmt(renewalInfo.nextBilledAt)}
-                  {renewalInfo.price && (
-                    <span className="text-[rgba(240,237,230,0.4)] font-normal"> · {renewalInfo.price}/mese</span>
-                  )}
-                </span>
-              </div>
-            );
-            return null;
-          })()}
-
-          {refundResult && (
-            <p className="text-xs text-accent font-medium">
-              {refundResult.previousPlan
-                ? `Rimborso elaborato · piano ridotto a ${PLAN_LABELS[refundResult.previousPlan] ?? refundResult.previousPlan}`
-                : "Rimborso elaborato · abbonamento cancellato"}
-            </p>
+      {/* Plan name + status */}
+      <div className="px-6 pt-3 pb-5 flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <p className="font-display text-2xl font-bold text-fg leading-none">
+            {PLAN_LABELS[plan] ?? plan}
+          </p>
+          {downgradedPlan && downgradedPlan !== "cancelled" && (
+            <span className="text-[10px] text-orange-300 font-medium">
+              → {PLAN_LABELS[downgradedPlan] ?? downgradedPlan} al rinnovo
+            </span>
           )}
         </div>
+        <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full shrink-0", accent.badge)}>
+          {cancelDone && !refundResult ? "Cancellazione schedulata" : "Attivo"}
+        </span>
+      </div>
 
-        <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
+      <div className="h-px bg-[rgba(240,237,230,0.06)] mx-6" />
 
-        {/* Actions footer */}
-        <div className="px-6 py-4 flex flex-wrap gap-2">
+      {/* Renewal + actions */}
+      <div className="px-6 py-5 flex flex-col gap-4">
+        {/* Renewal / status */}
+        {renewalInfo && !refundResult && (() => {
+          const sc = renewalInfo.scheduledChange;
+          if (sc?.action === "cancel") return (
+            <p className="text-xs text-red-400 bg-red-400/8 rounded-lg px-3 py-2">
+              Attivo fino al {fmt(sc.effectiveAt)}
+            </p>
+          );
+          if (renewalInfo.nextBilledAt) return (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] uppercase tracking-widest text-[rgba(240,237,230,0.4)] font-semibold">
+                Rinnovo il
+              </span>
+              <span className="text-fg text-sm font-medium">
+                {fmt(renewalInfo.nextBilledAt)}
+                {renewalInfo.price && (
+                  <span className="text-[rgba(240,237,230,0.4)] font-normal"> · {renewalInfo.price}/mese</span>
+                )}
+              </span>
+            </div>
+          );
+          return null;
+        })()}
+
+        {refundResult && (
+          <p className="text-xs text-accent font-medium">
+            {refundResult.previousPlan
+              ? `Rimborso elaborato · piano ridotto a ${PLAN_LABELS[refundResult.previousPlan] ?? refundResult.previousPlan}`
+              : "Rimborso elaborato · abbonamento cancellato"}
+          </p>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2">
           {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && credits >= planCredits && (
             <button
               onClick={handleRefund}
               disabled={refunding}
-              className={cn(
-                "text-xs font-medium px-3.5 py-2 rounded-lg border border-[rgba(240,237,230,0.1)]",
-                "text-[rgba(240,237,230,0.5)] hover:text-fg hover:border-[rgba(240,237,230,0.2)]",
-                "transition-all duration-150 disabled:opacity-40"
-              )}
+              className="text-xs font-medium px-3.5 py-2 rounded-lg border border-[rgba(240,237,230,0.1)] text-[rgba(240,237,230,0.5)] hover:text-fg hover:border-[rgba(240,237,230,0.2)] transition-all duration-150 disabled:opacity-40"
             >
-              {refunding ? "Rimborso in corso…" : "Richiedi rimborso"}
+              {refunding ? "Rimborso in corso..." : "Richiedi rimborso"}
             </button>
           )}
           {!cancelDone && !refundResult && nextPlan !== "cancelled" && paddleSubscriptionId && (
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className={cn(
-                "text-xs font-medium px-3.5 py-2 rounded-lg border border-red-400/20",
-                "text-red-400/70 hover:text-red-400 hover:border-red-400/40 hover:bg-red-400/5",
-                "transition-all duration-150 disabled:opacity-40"
-              )}
+              className="text-xs font-medium px-3.5 py-2 rounded-lg border border-red-400/20 text-red-400/70 hover:text-red-400 hover:border-red-400/40 hover:bg-red-400/5 transition-all duration-150 disabled:opacity-40"
             >
-              {cancelling ? "Cancellazione in corso…" : "Cancella abbonamento"}
+              {cancelling ? "Cancellazione in corso..." : "Cancella abbonamento"}
             </button>
           )}
           {(cancelDone || downgradedPlan) && !refundResult && paddleSubscriptionId && (
             <button
               onClick={handleRestore}
               disabled={restoring}
-              className={cn(
-                "text-xs font-medium px-3.5 py-2 rounded-lg border border-accent/30",
-                "text-accent/70 hover:text-accent hover:border-accent/50 hover:bg-accent/5",
-                "transition-all duration-150 disabled:opacity-40"
-              )}
+              className="text-xs font-medium px-3.5 py-2 rounded-lg border border-accent/30 text-accent/70 hover:text-accent hover:border-accent/50 hover:bg-accent/5 transition-all duration-150 disabled:opacity-40"
             >
-              {restoring ? "Ripristino in corso…" : "Ripristina abbonamento"}
+              {restoring ? "Ripristino in corso..." : "Ripristina abbonamento"}
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Right column: Cambia piano + Storico ── */}
-      <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] overflow-hidden">
+      {/* ── Cambia piano ── */}
+      {otherPlans.length > 0 && (
+        <>
+          <div className="h-px bg-[rgba(240,237,230,0.06)]" />
 
-        {/* Cambia piano header */}
-        {otherPlans.length > 0 && (
-          <>
-            <div className="px-6 pt-6 pb-5">
-              <p className="font-display text-lg font-bold text-fg leading-none">Cambia piano</p>
-              <p className="text-[rgba(240,237,230,0.4)] text-xs mt-1">
-                Il cambio di piano è attivo al prossimo rinnovo
-              </p>
-            </div>
+          <div className="px-6 pt-5 pb-2">
+            <p className="text-sm font-semibold text-fg">Cambia piano</p>
+            <p className="text-[rgba(240,237,230,0.4)] text-[11px] mt-0.5">
+              Il cambio sarà attivo al prossimo rinnovo
+            </p>
+          </div>
 
-            <div className="h-px bg-[rgba(240,237,230,0.06)]" />
-
-            {/* Plan rows */}
-            <div className="divide-y divide-[rgba(240,237,230,0.05)]">
-              {otherPlans.map((p) => {
-                const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
-                const isThisDowngrading = downgrading === p.priceId;
-                const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
-                const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
-                return (
-                  <div key={p.priceId} className="px-6 py-4 flex items-center gap-4">
-                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={cn("size-1.5 rounded-full shrink-0", pa.dot)} />
-                        <span className="text-fg font-semibold text-sm">{p.name}</span>
-                        {isScheduled && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-400/15 text-orange-300">
-                            Schedulato
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[rgba(240,237,230,0.4)] text-xs pl-3.5">
-                        {p.credits} crediti · {p.price}/mese
-                      </span>
-                    </div>
-                    {!isScheduled && (
-                      <button
-                        onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
-                        disabled={isThisDowngrading}
-                        className={cn(
-                          "shrink-0 h-8 px-4 rounded-lg border text-xs font-semibold transition-all duration-150 disabled:opacity-40 disabled:cursor-default",
-                          isUpgrade
-                            ? "border-accent/50 text-accent hover:border-accent hover:bg-accent/8"
-                            : "border-[rgba(240,237,230,0.12)] text-[rgba(240,237,230,0.55)] hover:text-fg hover:border-[rgba(240,237,230,0.22)] hover:bg-[rgba(240,237,230,0.04)]"
-                        )}
-                      >
-                        {isThisDowngrading ? "…" : isUpgrade ? "Upgrade" : "Downgrade"}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {/* ── Storico pagamenti ── */}
-        {transactions.length > 0 && (
-          <>
-            <div className="h-px bg-[rgba(240,237,230,0.06)]" />
-
-            <button
-              onClick={() => setShowHistory((v) => !v)}
-              className="flex items-center justify-between w-full px-6 py-4 hover:bg-[rgba(240,237,230,0.02)] transition-colors text-left"
-            >
-              <div className="flex items-center gap-2.5">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <rect x="2" y="3" width="12" height="10" rx="2" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" />
-                  <path d="M5 7h6M5 10h4" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span className="text-[rgba(240,237,230,0.6)] text-sm font-medium">Storico pagamenti</span>
-                <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded bg-[rgba(240,237,230,0.06)] text-[rgba(240,237,230,0.4)]">
-                  {transactions.length}
-                </span>
-              </div>
-              <span className="text-[rgba(240,237,230,0.35)]">
-                <ChevronDown open={showHistory} />
-              </span>
-            </button>
-
-            {showHistory && (
-              <>
-                <div className="h-px bg-[rgba(240,237,230,0.05)]" />
-                <div className="flex flex-col divide-y divide-[rgba(240,237,230,0.05)]">
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between px-6 py-3.5">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-fg text-sm font-medium">
-                          {new Date(tx.createdAt).toLocaleDateString("it-IT", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
+          <div className="divide-y divide-[rgba(240,237,230,0.05)]">
+            {otherPlans.map((p) => {
+              const isUpgrade = p.credits > (PLAN_CREDITS[plan] ?? 0);
+              const isThisDowngrading = downgrading === p.priceId;
+              const isScheduled = !isUpgrade && downgradedPlan === p.name.toLowerCase();
+              const pa = PLAN_ACCENT[p.name.toLowerCase()] ?? PLAN_ACCENT.casual;
+              return (
+                <div key={p.priceId} className="px-6 py-3.5 flex items-center gap-4">
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("size-1.5 rounded-full shrink-0", pa.dot)} />
+                      <span className="text-fg font-semibold text-sm">{p.name}</span>
+                      {isScheduled && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-400/15 text-orange-300">
+                          Schedulato
                         </span>
-                        <span className="text-[rgba(240,237,230,0.35)] text-xs capitalize">{tx.status}</span>
-                      </div>
-                      <span className="text-fg font-semibold text-sm tabular-nums">
-                        {tx.currency} {tx.amount}
-                      </span>
+                      )}
                     </div>
-                  ))}
+                    <span className="text-[rgba(240,237,230,0.4)] text-xs pl-3.5">
+                      {p.credits} crediti · {p.price}/mese
+                    </span>
+                  </div>
+                  {!isScheduled && (
+                    <button
+                      onClick={() => isUpgrade ? handleCheckout(p.priceId) : handleDowngrade(p.priceId, p.name)}
+                      disabled={isThisDowngrading}
+                      className={cn(
+                        "shrink-0 h-8 px-4 rounded-lg border text-xs font-semibold transition-all duration-150 disabled:opacity-40 disabled:cursor-default",
+                        isUpgrade
+                          ? "border-accent/50 text-accent hover:border-accent hover:bg-accent/8"
+                          : "border-[rgba(240,237,230,0.12)] text-[rgba(240,237,230,0.55)] hover:text-fg hover:border-[rgba(240,237,230,0.22)] hover:bg-[rgba(240,237,230,0.04)]"
+                      )}
+                    >
+                      {isThisDowngrading ? "..." : isUpgrade ? "Upgrade" : "Downgrade"}
+                    </button>
+                  )}
                 </div>
-              </>
-            )}
-          </>
-        )}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* ── Storico pagamenti ── */}
+      {transactions.length > 0 && (
+        <>
+          <div className="h-px bg-[rgba(240,237,230,0.06)]" />
+
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className="flex items-center justify-between w-full px-6 py-4 hover:bg-[rgba(240,237,230,0.02)] transition-colors text-left mt-auto"
+          >
+            <div className="flex items-center gap-2.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="10" rx="2" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" />
+                <path d="M5 7h6M5 10h4" stroke="rgba(240,237,230,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              <span className="text-[rgba(240,237,230,0.6)] text-sm font-medium">Storico pagamenti</span>
+              <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded bg-[rgba(240,237,230,0.06)] text-[rgba(240,237,230,0.4)]">
+                {transactions.length}
+              </span>
+            </div>
+            <span className="text-[rgba(240,237,230,0.35)]">
+              <ChevronDown open={showHistory} />
+            </span>
+          </button>
+
+          {showHistory && (
+            <>
+              <div className="h-px bg-[rgba(240,237,230,0.05)]" />
+              <div className="flex flex-col divide-y divide-[rgba(240,237,230,0.05)]">
+                {transactions.map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between px-6 py-3.5">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-fg text-sm font-medium">
+                        {new Date(tx.createdAt).toLocaleDateString("it-IT", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="text-[rgba(240,237,230,0.35)] text-xs capitalize">{tx.status}</span>
+                    </div>
+                    <span className="text-fg font-semibold text-sm tabular-nums">
+                      {tx.currency} {tx.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }

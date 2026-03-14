@@ -46,16 +46,13 @@ export default function CvSection({ initialFilename }: Props) {
   };
 
   return (
-    <div
-      className="flex flex-col gap-4 p-6 rounded-2xl"
-      style={{ background: "#0f0f13", border: "1px solid rgba(240,237,230,0.07)" }}
-    >
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h3 className="font-semibold text-sm" style={{ color: "rgba(240,237,230,0.85)" }}>
-          CV
+        <h3 className="font-semibold text-sm text-fg/85">
+          Curriculum
         </h3>
-        <p className="text-xs leading-relaxed" style={{ color: "rgba(240,237,230,0.4)" }}>
-          Carica il tuo CV per personalizzare ogni intervista — l&apos;AI farà riferimento alle tue esperienze specifiche.
+        <p className="text-xs leading-relaxed text-[rgba(240,237,230,0.4)]">
+          Carica il tuo CV per personalizzare ogni intervista.
         </p>
       </div>
 

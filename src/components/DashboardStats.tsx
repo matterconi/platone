@@ -68,7 +68,6 @@ const cardVariants = {
   },
 };
 
-// Custom tooltip for the line chart
 function ChartTooltip({
   active,
   payload,
@@ -90,7 +89,6 @@ function ChartTooltip({
   );
 }
 
-// Circular SVG progress ring for credits
 function CreditsRing({
   credits,
   planCredits,
@@ -98,43 +96,21 @@ function CreditsRing({
   credits: number;
   planCredits: number;
 }) {
-  const r = 28;
+  const r = 24;
   const circumference = 2 * Math.PI * r;
   const pct = planCredits > 0 ? Math.min(1, credits / planCredits) : 0;
   const offset = circumference * (1 - pct);
 
   return (
-    <svg width="72" height="72" viewBox="0 0 72 72" className="shrink-0">
+    <svg width="60" height="60" viewBox="0 0 60 60" className="shrink-0">
+      <circle cx="30" cy="30" r={r} fill="none" stroke="rgba(240,237,230,0.07)" strokeWidth="4" />
       <circle
-        cx="36"
-        cy="36"
-        r={r}
-        fill="none"
-        stroke="rgba(240,237,230,0.07)"
-        strokeWidth="5"
-      />
-      <circle
-        cx="36"
-        cy="36"
-        r={r}
-        fill="none"
-        stroke={LIME}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        transform="rotate(-90 36 36)"
+        cx="30" cy="30" r={r} fill="none" stroke={LIME} strokeWidth="4"
+        strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset}
+        transform="rotate(-90 30 30)"
         style={{ transition: "stroke-dashoffset 0.8s ease" }}
       />
-      <text
-        x="36"
-        y="40"
-        textAnchor="middle"
-        fill="#f0ede6"
-        fontSize="13"
-        fontWeight="700"
-        fontFamily="inherit"
-      >
+      <text x="30" y="34" textAnchor="middle" fill="#f0ede6" fontSize="12" fontWeight="700" fontFamily="inherit">
         {credits}
       </text>
     </svg>
@@ -153,9 +129,8 @@ export default function DashboardStats({
   avgCommunication,
   plan,
 }: DashboardStatsProps) {
-  const [activeTab, setActiveTab] = useState(3); // "Tutti" by default
+  const [activeTab, setActiveTab] = useState(3);
 
-  // Filter chart data by selected time period
   const filteredPoints = useMemo(() => {
     const filter = TIME_FILTERS[activeTab];
     if (!filter || filter.days === 0) return performancePoints;
@@ -164,14 +139,12 @@ export default function DashboardStats({
     return performancePoints.filter((p) => new Date(p.rawDate) >= cutoff);
   }, [performancePoints, activeTab]);
 
-  // Overall avg score
   const overallAvg = useMemo(() => {
     if (!performancePoints.length) return null;
     const sum = performancePoints.reduce((a, p) => a + p.avgScore, 0);
     return sum / performancePoints.length;
   }, [performancePoints]);
 
-  // Skills donut data
   const skillsData = useMemo(
     () => [
       { name: SKILL_LABELS[0], value: avgDomainKnowledge || 0.01 },
@@ -189,7 +162,6 @@ export default function DashboardStats({
     [avgDomainKnowledge, avgProblemSolving, avgCommunication, performancePoints.length]
   );
 
-  // Format minutes
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
   const timeLabel = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
@@ -200,285 +172,210 @@ export default function DashboardStats({
     pro: "Pro",
   };
 
+  const cardBase = "bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-5 flex flex-col gap-2 hover:ring-[rgba(184,255,0,0.15)] hover:shadow-[0_0_24px_rgba(184,255,0,0.04)] transition-all duration-300";
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex flex-col gap-5"
+      className="grid grid-cols-2 lg:grid-cols-4 gap-4"
     >
-      {/* Row 1: Performance + Skills */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.55fr] gap-5">
-        {/* Performance Score Card */}
-        <motion.div
-          variants={cardVariants}
-          className="group relative bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-5 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_32px_rgba(184,255,0,0.05)] transition-all duration-300"
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.45)] mb-1">
-                Performance nel tempo
+      {/* ── Performance chart — 3 cols on lg ── */}
+      <motion.div
+        variants={cardVariants}
+        className="col-span-2 lg:col-span-3 group relative bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-5 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_32px_rgba(184,255,0,0.05)] transition-all duration-300"
+      >
+        {/* Section label + score */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">01</span>
+            <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+              Performance
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-display text-5xl font-bold leading-none text-accent">
+              {overallAvg !== null ? overallAvg.toFixed(1) : "—"}
+            </span>
+            <span className="text-[rgba(240,237,230,0.4)] text-lg">/ 10</span>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="h-44">
+          {filteredPoints.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center gap-2">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="opacity-30">
+                <path
+                  d="M4 24 L10 16 L16 20 L22 10 L28 14"
+                  stroke="#f0ede6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                />
+              </svg>
+              <p className="text-[rgba(240,237,230,0.35)] text-sm text-center">
+                Nessuna intervista valutata ancora
               </p>
-              <div className="flex items-baseline gap-2">
-                <span
-                  className="font-display text-5xl font-bold leading-none"
-                  style={{ color: LIME }}
-                >
-                  {overallAvg !== null ? overallAvg.toFixed(1) : "—"}
-                </span>
-                <span className="text-[rgba(240,237,230,0.45)] text-lg">/ 10</span>
-              </div>
-            </div>
-            <button className="flex items-center justify-center size-8 rounded-full bg-[rgba(184,255,0,0.12)] text-accent hover:bg-[rgba(184,255,0,0.22)] transition-colors text-sm font-bold">
-              →
-            </button>
-          </div>
-
-          {/* Chart */}
-          <div className="h-44">
-            {filteredPoints.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center gap-2">
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 32 32"
-                  fill="none"
-                  className="opacity-30"
-                >
-                  <path
-                    d="M4 24 L10 16 L16 20 L22 10 L28 14"
-                    stroke="#f0ede6"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <p className="text-[rgba(240,237,230,0.35)] text-sm text-center">
-                  Nessuna intervista valutata ancora
-                </p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={filteredPoints}
-                  margin={{ top: 4, right: 4, left: -28, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="limeGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={LIME} stopOpacity={0.18} />
-                      <stop offset="100%" stopColor={LIME} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(240,237,230,0.05)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fill: "rgba(240,237,230,0.35)", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    domain={[0, 10]}
-                    tick={{ fill: "rgba(240,237,230,0.35)", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(240,237,230,0.1)" }} />
-                  <Area
-                    type="monotone"
-                    dataKey="avgScore"
-                    stroke={LIME}
-                    strokeWidth={2.5}
-                    fill="url(#limeGradient)"
-                    dot={{ fill: LIME, r: 3, strokeWidth: 0 }}
-                    activeDot={{ fill: LIME, r: 5, strokeWidth: 2, stroke: "#07070a" }}
-                    isAnimationActive={true}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-
-          {/* Time filter tabs */}
-          <div className="flex items-center gap-2">
-            {TIME_FILTERS.map((f, i) => (
-              <button
-                key={f.label}
-                onClick={() => setActiveTab(i)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
-                  activeTab === i
-                    ? "bg-accent text-black"
-                    : "bg-white/5 text-[rgba(240,237,230,0.45)] hover:text-fg"
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Skills Distribution Card */}
-        <motion.div
-          variants={cardVariants}
-          className="group bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-4 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_32px_rgba(184,255,0,0.05)] transition-all duration-300"
-        >
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.45)]">
-            Distribuzione skills
-          </p>
-
-          {/* Donut chart */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="relative">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie
-                    data={skillsData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={52}
-                    outerRadius={74}
-                    dataKey="value"
-                    strokeWidth={0}
-                    paddingAngle={3}
-                    animationBegin={200}
-                    animationDuration={700}
-                  >
-                    {skillsData.map((_, idx) => (
-                      <Cell key={idx} fill={SKILL_COLORS[idx]} opacity={performancePoints.length ? 1 : 0.25} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              {/* Center label */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-[rgba(240,237,230,0.45)] text-[10px] uppercase tracking-wider">
-                  Media
-                </span>
-                <span className="font-display text-2xl font-bold text-fg leading-none">
-                  {totalSkillAvg}
-                </span>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="w-full flex flex-col gap-2.5 mt-1">
-              {SKILL_LABELS.map((label, i) => {
-                const scores = [avgDomainKnowledge, avgProblemSolving, avgCommunication];
-                return (
-                  <div key={label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="size-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: SKILL_COLORS[i] }}
-                      />
-                      <span className="text-[rgba(240,237,230,0.6)] text-xs">{label}</span>
-                    </div>
-                    <span className="text-fg text-xs font-semibold tabular-nums">
-                      {performancePoints.length ? scores[i].toFixed(1) : "—"}
-                      <span className="text-[rgba(240,237,230,0.35)] font-normal"> /10</span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Row 2: 4 stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Interviste completate */}
-        <motion.div
-          variants={cardVariants}
-          className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-2 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_20px_rgba(184,255,0,0.05)] transition-all duration-300"
-        >
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.45)]">
-            Interviste
-          </p>
-          <span
-            className="font-display text-4xl font-bold leading-none"
-            style={{ color: LIME }}
-          >
-            {totalInterviews}
-          </span>
-          <span className="text-[rgba(240,237,230,0.45)] text-xs">completate</span>
-        </motion.div>
-
-        {/* Crediti */}
-        <motion.div
-          variants={cardVariants}
-          className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-3 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_20px_rgba(184,255,0,0.05)] transition-all duration-300"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-1">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.45)]">
-                Crediti
-              </p>
-              {plan && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent w-fit">
-                  {PLAN_LABELS[plan] ?? plan}
-                </span>
-              )}
-            </div>
-            <CreditsRing credits={credits} planCredits={planCredits} />
-          </div>
-          <p className="text-[rgba(240,237,230,0.45)] text-xs">
-            <span className="text-fg font-semibold">{credits}</span>
-            {planCredits > 0 && (
-              <span> / {planCredits}</span>
-            )}
-            {" "}rimanenti
-          </p>
-        </motion.div>
-
-        {/* Ore praticate */}
-        <motion.div
-          variants={cardVariants}
-          className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-2 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_20px_rgba(184,255,0,0.05)] transition-all duration-300"
-        >
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.45)]">
-            Pratica
-          </p>
-          <span className="font-display text-4xl font-bold leading-none text-fg">
-            {totalMinutes > 0 ? timeLabel : "0m"}
-          </span>
-          <span className="text-[rgba(240,237,230,0.45)] text-xs">tempo totale</span>
-        </motion.div>
-
-        {/* Punti di forza */}
-        <motion.div
-          variants={cardVariants}
-          className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-3 hover:ring-[rgba(184,255,0,0.2)] hover:shadow-[0_0_20px_rgba(184,255,0,0.05)] transition-all duration-300"
-        >
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.45)]">
-            Punti di forza
-          </p>
-          {latestStrengths.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {latestStrengths.slice(0, 2).map((s, i) => (
-                <span
-                  key={i}
-                  className="text-xs text-black font-semibold bg-accent rounded-full px-2.5 py-1 leading-snug line-clamp-1"
-                >
-                  {s}
-                </span>
-              ))}
             </div>
           ) : (
-            <p className="text-[rgba(240,237,230,0.35)] text-xs leading-snug">
-              Completa un&apos;intervista
-            </p>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={filteredPoints} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="limeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={LIME} stopOpacity={0.18} />
+                    <stop offset="100%" stopColor={LIME} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(240,237,230,0.05)" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: "rgba(240,237,230,0.35)", fontSize: 11 }}
+                  axisLine={false} tickLine={false} interval="preserveStartEnd"
+                />
+                <YAxis
+                  domain={[0, 10]}
+                  tick={{ fill: "rgba(240,237,230,0.35)", fontSize: 11 }}
+                  axisLine={false} tickLine={false}
+                />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(240,237,230,0.1)" }} />
+                <Area
+                  type="monotone" dataKey="avgScore" stroke={LIME} strokeWidth={2.5}
+                  fill="url(#limeGradient)"
+                  dot={{ fill: LIME, r: 3, strokeWidth: 0 }}
+                  activeDot={{ fill: LIME, r: 5, strokeWidth: 2, stroke: "#07070a" }}
+                  isAnimationActive={true} animationDuration={800} animationEasing="ease-out"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           )}
-        </motion.div>
-      </div>
+        </div>
+
+        {/* Time filter tabs */}
+        <div className="flex items-center gap-2">
+          {TIME_FILTERS.map((f, i) => (
+            <button
+              key={f.label}
+              onClick={() => setActiveTab(i)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                activeTab === i
+                  ? "bg-accent text-black"
+                  : "bg-white/5 text-[rgba(240,237,230,0.45)] hover:text-fg"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* ── Skills — spans 2 rows on lg ── */}
+      <motion.div
+        variants={cardVariants}
+        className="col-span-2 lg:col-span-1 lg:row-span-2 group bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-5 flex flex-col gap-4 hover:ring-[rgba(184,255,0,0.15)] hover:shadow-[0_0_24px_rgba(184,255,0,0.04)] transition-all duration-300"
+      >
+        <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+          Distribuzione skills
+        </p>
+
+        <div className="flex flex-col items-center gap-1 flex-1 justify-center">
+          <div className="relative">
+            <ResponsiveContainer width={140} height={140}>
+              <PieChart>
+                <Pie
+                  data={skillsData} cx="50%" cy="50%"
+                  innerRadius={46} outerRadius={64}
+                  dataKey="value" strokeWidth={0} paddingAngle={3}
+                  animationBegin={200} animationDuration={700}
+                >
+                  {skillsData.map((_, idx) => (
+                    <Cell key={idx} fill={SKILL_COLORS[idx]} opacity={performancePoints.length ? 1 : 0.25} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-[rgba(240,237,230,0.4)] text-[10px] uppercase tracking-wider">Media</span>
+              <span className="font-display text-2xl font-bold text-fg leading-none">{totalSkillAvg}</span>
+            </div>
+          </div>
+
+          <div className="w-full flex flex-col gap-2.5 mt-2">
+            {SKILL_LABELS.map((label, i) => {
+              const scores = [avgDomainKnowledge, avgProblemSolving, avgCommunication];
+              return (
+                <div key={label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: SKILL_COLORS[i] }} />
+                    <span className="text-[rgba(240,237,230,0.55)] text-xs">{label}</span>
+                  </div>
+                  <span className="text-fg text-xs font-semibold tabular-nums">
+                    {performancePoints.length ? scores[i].toFixed(1) : "—"}
+                    <span className="text-[rgba(240,237,230,0.3)] font-normal"> /10</span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Interviste + Pratica combined ── */}
+      <motion.div variants={cardVariants} className={cardBase}>
+        <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+          Interviste
+        </p>
+        <span className="font-display text-3xl font-bold leading-none text-accent">
+          {totalInterviews}
+        </span>
+        <span className="text-[rgba(240,237,230,0.4)] text-xs">
+          completate · {totalMinutes > 0 ? timeLabel : "0m"} pratica
+        </span>
+      </motion.div>
+
+      {/* ── Crediti ── */}
+      <motion.div variants={cardVariants} className={cardBase}>
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+              Crediti
+            </p>
+            {plan && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent w-fit">
+                {PLAN_LABELS[plan] ?? plan}
+              </span>
+            )}
+          </div>
+          <CreditsRing credits={credits} planCredits={planCredits} />
+        </div>
+        <p className="text-[rgba(240,237,230,0.4)] text-xs">
+          <span className="text-fg font-semibold">{credits}</span>
+          {planCredits > 0 && <span> / {planCredits}</span>}
+          {" "}rimanenti
+        </p>
+      </motion.div>
+
+      {/* ── Punti di forza ── */}
+      <motion.div variants={cardVariants} className={cn(cardBase, "col-span-2 lg:col-span-1")}>
+        <p className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+          Punti di forza
+        </p>
+        {latestStrengths.length > 0 ? (
+          <div className="flex flex-col gap-2 mt-1">
+            {latestStrengths.slice(0, 2).map((s, i) => (
+              <span
+                key={i}
+                className="text-xs text-black font-semibold bg-accent rounded-full px-2.5 py-1 leading-snug line-clamp-1"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[rgba(240,237,230,0.35)] text-xs leading-snug">
+            Completa un&apos;intervista
+          </p>
+        )}
+      </motion.div>
     </motion.div>
   );
 }

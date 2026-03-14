@@ -45,6 +45,7 @@ export default async function DashboardPage() {
   const cvFilename: string | null = cvRows[0]?.cv_filename ?? null;
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   const firstName = user?.firstName ?? null;
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null;
 
   // Process performance data for DashboardStats
   type EvalRow = {
@@ -118,7 +119,6 @@ export default async function DashboardPage() {
       const price = unitPrice
         ? `${unitPrice.currencyCode} ${(parseInt(unitPrice.amount) / 100).toFixed(2)}`
         : null;
-      // nextBilledAt can be null in sandbox — fall back to currentBillingPeriod.endsAt
       const nextBilledAt = sub.nextBilledAt ?? sub.currentBillingPeriod?.endsAt ?? null;
       renewalInfo = {
         nextBilledAt,
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
       <div className="border-b border-[rgba(240,237,230,0.07)]">
         <div className="max-w-5xl mx-auto px-6 py-10 flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[rgba(240,237,230,0.35)] mb-2">
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[rgba(240,237,230,0.3)] mb-2">
               Area personale
             </p>
             <h1 className="font-display text-4xl font-bold text-fg leading-none">
@@ -156,14 +156,10 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto px-6 py-12 flex flex-col gap-16">
+      <main className="max-w-5xl mx-auto px-6 py-10 flex flex-col gap-10">
 
-        {/* Stats overview */}
-        <AnimatedSection className="flex flex-col gap-6" delay={0}>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">01</span>
-            <h2 className="font-display text-2xl font-bold text-fg">Performance</h2>
-          </div>
+        {/* ── Section 1: Performance bento — header inside DashboardStats ── */}
+        <AnimatedSection delay={0}>
           <DashboardStats
             performancePoints={performancePoints}
             totalInterviews={totalInterviews}
@@ -179,16 +175,18 @@ export default async function DashboardPage() {
           />
         </AnimatedSection>
 
-        {/* Interviste */}
-        <AnimatedSection className="flex flex-col gap-6" delay={0}>
-          <div className="flex items-end justify-between gap-4">
-            <div className="flex flex-col gap-1">
+        {/* ── Section 2: Interviews — subtle integrated label ── */}
+        <AnimatedSection className="flex flex-col gap-5" delay={0}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">02</span>
-              <h2 className="font-display text-2xl font-bold text-fg">Le tue interviste</h2>
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+                Le tue interviste
+              </span>
             </div>
             <Link
               href="/interview/new"
-              className="shrink-0 sm:hidden inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-accent/10 border border-accent/25 hover:border-accent/50 text-accent text-xs font-semibold transition-all duration-200"
+              className="shrink-0 sm:hidden inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-accent/10 border border-accent/25 hover:border-accent/50 text-accent text-xs font-semibold transition-all duration-200"
             >
               + Nuova
             </Link>
@@ -196,22 +194,43 @@ export default async function DashboardPage() {
           <Interviews />
         </AnimatedSection>
 
-        {/* Profilo CV */}
-        <AnimatedSection className="flex flex-col gap-6" delay={0.05}>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">03</span>
-            <h2 className="font-display text-2xl font-bold text-fg">Curriculum</h2>
-          </div>
-          <CvSection initialFilename={cvFilename} />
-        </AnimatedSection>
+        {/* ── Section 3+4: Profilo + Piano bento row ── */}
+        <AnimatedSection
+          className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-4 items-stretch"
+          delay={0.05}
+        >
+          {/* Profilo card */}
+          <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col gap-5">
+            {/* Section label */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">03</span>
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+                Profilo
+              </span>
+            </div>
 
-        {/* Piano */}
-        <AnimatedSection className="flex flex-col gap-6" delay={0.1}>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">04</span>
-            <h2 className="font-display text-2xl font-bold text-fg">Il tuo piano</h2>
+            {/* User info */}
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">
+                {firstName?.[0]?.toUpperCase() ?? "U"}
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="text-fg text-sm font-semibold truncate">
+                  {fullName ?? "Utente"}
+                </span>
+                <span className="text-[rgba(240,237,230,0.4)] text-xs truncate">
+                  {userEmail}
+                </span>
+              </div>
+            </div>
+
+            <div className="h-px bg-[rgba(240,237,230,0.06)]" />
+
+            {/* CV section embedded */}
+            <CvSection initialFilename={cvFilename} />
           </div>
 
+          {/* Piano card */}
           {access.hasActiveSubscription && access.plan ? (
             <SubscriptionManager
               plan={access.plan}
@@ -224,14 +243,18 @@ export default async function DashboardPage() {
               renewalInfo={renewalInfo}
             />
           ) : (
-            <div className="group relative w-full max-w-lg">
-              {/* Gradient border wrapper */}
-              <div className="absolute inset-0 rounded-2xl bg-linear-to-b from-[rgba(240,237,230,0.14)] to-[rgba(240,237,230,0.04)] opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative bg-[#0f0f13] rounded-2xl m-px p-8 flex flex-col gap-4">
+            <div className="bg-[#0f0f13] rounded-2xl ring-1 ring-[rgba(240,237,230,0.07)] p-6 flex flex-col">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-accent/50">04</span>
+                <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgba(240,237,230,0.4)]">
+                  Il tuo piano
+                </span>
+              </div>
+              <div className="flex flex-col gap-4 flex-1 justify-center">
                 <p className="font-display text-lg font-semibold text-fg">
                   Nessun piano attivo
                 </p>
-                <p className="text-sm text-[rgba(240,237,230,0.45)] leading-relaxed">
+                <p className="text-sm text-[rgba(240,237,230,0.4)] leading-relaxed">
                   Scegli un piano per accedere alle interviste con il tuo AI voice coach.
                 </p>
                 <div>
